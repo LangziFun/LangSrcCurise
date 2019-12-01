@@ -19,7 +19,7 @@
     <h1>详情信息</h1>
         <td><h3>序号</td><td><h3>{{bea_list.uid}}</td>
         </tr>
-        <td><h3>网址：</td><td><h3><a href="{{bea_list.url}}">{{bea_list.url}}</a></td>
+        <td><h3>网址：</td><td><h3><a href="{{bea_list.url}}" target="_blank">{{bea_list.url}}</a></td>
         </tr>
                 <td><h3>标题：</td><td><h3>{{bea_list.title}}</td>
         </tr>
@@ -54,7 +54,7 @@
 
                 <td><h3>部署网站：</td><td><h3>{% for lis in RRess.alive_urls%}
                     {% for k,v in lis.items %}
-                   <a href="{{k}}">{{k}}</a>>>状态码:{{v}}<br>
+                   <a href="{{k}}" target="_blank">{{k}}</a>>>状态码:{{v}}<br>
                 {%endfor%}
 {%endfor%}
                 </td>
