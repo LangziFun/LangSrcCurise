@@ -41,9 +41,8 @@ def login_required(func):
 
 
 
-
 def bar_base() -> Bar:
-    bar = Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN))
+    bar = Bar(init_opts=opts.InitOpts(theme=ThemeType.WALDEN,width="600px", height="450px"))
     Dom = Domains.objects.all()
     jk_domains = [x.get('url') for x in Dom.values()]
     jd_count = [x.get('counts') for x in Dom.values()]
@@ -52,7 +51,7 @@ def bar_base() -> Bar:
     return bar
 
 def line_base() -> Line:
-    line = Line(init_opts=opts.InitOpts(theme=ThemeType.WONDERLAND))
+    line = Line(init_opts=opts.InitOpts(theme=ThemeType.WONDERLAND,width="600px", height="450px"))
     Dom = Domains.objects.all()
     jk_domains = [x.get('url') for x in Dom.values()]
     jd_count = [x.get('counts') for x in Dom.values()]
@@ -87,7 +86,7 @@ def geo_base() -> Geo:
     result = list(zip(data.keys(),data.values()))
 
     c = (
-        Geo()
+        Geo(init_opts=opts.InitOpts(width="600px", height="450px"))
         .add_schema(maptype="china")
         .add("IP归属地统计", result)
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
@@ -133,7 +132,7 @@ def scatter3d_base() -> Scatter3D:
     for o in Oth:
         data.append([o.get('power'),o.get('server'),o.get('status')])
     c = (
-        Scatter3D()
+        Scatter3D(init_opts=opts.InitOpts(width="600px", height="450px"))
         .add("请求响应数据统计", data)
         .set_global_opts(
             title_opts=opts.TitleOpts(),

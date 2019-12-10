@@ -228,6 +228,8 @@ def Baidu(domain):
                     bla = check_black(real_url)
                     if bla == False:
                         returl_result.add(urlparse(real_url).scheme + '://' + urlparse(real_url).netloc)
+                    else:
+                        print('[+ URL Blacklist] 当前网址触发黑名单 : {}'.format(urlparse(real_url).scheme + '://' + urlparse(real_url).netloc))
         except Exception as e:
             # print(e)
             pass

@@ -50,24 +50,28 @@
 
 </div>
 
-<div class="col-sm-5">
+
+<div class="col-md-5">
 	<h1>监控域名捕获总数量:{{domain_counts}}</h1>
 	<br>
   {{ bar_ech|safe }}
-<br>
+<br><br><br>
   {{ line_ech|safe }}
 
 
 </div>
-<div class="col-sm-5">
+
+<div class="col-md-5">
 	<h1>监控域名所属IP捕获总数量:{{ip_counts}}</h1>
 	<br>
 	{{geo_ech|safe}}
-	<br>
+	<br><br><br>
+
+
 	{{ddd_ech|safe}}
 </div>
 
-<div class="col-sm-2">
+<div class="col-md-2">
 	<form class="form-inline" action="{%url 'search'%}" method="GET">
 		{%csrf_token%}
 		 <div class="input-group-addon">域名搜索:

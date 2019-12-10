@@ -1,5 +1,7 @@
 # 更新
 
+- 2019-12-10:09点32分 更新网页黑名单配置
+- 2019-12-05:19点24分 代码注释优化
 - 2019-11-17:19点59分 更新端口指纹库
 - 2019-10-05:02点21分 优化网页资产整理
 
@@ -39,6 +41,8 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 3. nmap==7.8
 4. django==2.1.1
 
+**注:版本号必须匹配**
+
 # 安装环境
 
 ## Linux 用户
@@ -51,7 +55,7 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 3. sudo python3 -m pip install -r requirement.txt
 4. MySQL8.0
 
-**注意：在linux下执行任何生成数据库，启动任何服务命令前都需要加上 sudo**
+**注：在linux下执行任何生成数据库，启动任何服务命令前都需要加上 sudo**
 
 
 ## Windows 用户
@@ -64,7 +68,7 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 4. MySQL8.0
 
 
-# 开始使用
+# 配置环境
 
 ## 开启mysql服务
 
@@ -72,7 +76,7 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 2. 设置MySQL最大连接数为512，最大插入缓存数据量为200M
 
 
-推荐mysql.ini设置如下：
+Windows下推荐mysql.ini设置如下：
 
 	[mysql]
 	default-character-set=utf8
@@ -85,8 +89,9 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 	max_connect_errors=10
 	max_allowed_packet = 200M
 	log-error="E:/phpstudy_pro/Extensions/MySQL8.0.12/error.log"  
-	default_authentication_plugin=mysql_native_password 
 	# 这里的日志输出自己修改路径
+	default_authentication_plugin=mysql_native_password 
+	
 
 
 ## 配置数据库信息
@@ -103,7 +108,7 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 	dbname = LangSrcCurise # 你要是用的数据库名字，数据库自动创建
 	[API]
 	securitytrails = P0Y308OO9qwf5jpk47bL0PCJ9AKs9seX
-	# https://securitytrails.com 注册
+	# https://securitytrails.com 注册，免费账户一个月可以查询50次
 
 ## 初始化数据库
 
@@ -127,12 +132,20 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 
 完成将监控域名初始化到数据库
 
+**一些商城，旅游会使用大量的泛解析，所以需要自己适配黑名单过滤名单**
 
 ## 配置网址过滤黑名单
 
 	Auxiliary/Black_Url.list
 
 其下的网址都会被自动过滤，请勿修改文件名
+
+## 配置网页内容过滤黑名单
+
+	Auxiliary/Black_Con.list
+
+若网页内容出现该黑名单关键字，则会被自动过滤，请勿修改文件名
+
 
 ## 配置IP过滤黑名单
 

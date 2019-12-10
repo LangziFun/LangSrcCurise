@@ -32,7 +32,6 @@ pool_count = int(Set.Pool)
 Alive_Status = eval(Set.Alive_Code)
 
 Dicts = os.path.join('Auxiliary','Black_Url.list')
-
 black_list = list(set([x.strip() for x in open(Dicts, 'r', encoding='utf-8').readlines()]))
 
 
@@ -144,6 +143,9 @@ def Api(domain):
             bla = check_black(u)
             if bla == False:
                 mid.add('http://'+u)
+            else:
+                print('[+ URL Blacklist] 当前网址触发黑名单 : http://{}'.format(u))
+
     if mid != {}:
         result = Get_Alive_Url(list(mid))
         print('[+ BaiDu CertSh SecTra API] 接口 : {} 捕获子域名存活总数 : {}'.format(domain, len(result)))

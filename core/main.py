@@ -26,18 +26,25 @@ from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor
 from multiprocessing import Pool
 import threading
 import multiprocessing
+import contextlib
+
+
 
 Gloval_Check = {'domain':'qq.com','counts':0}
 
-#Sem = multiprocessing.Manager().BoundedSemaphore(1)
-
 Dicts = os.path.join('Auxiliary','Black_Ip.list')
-
 black_ip = list(set([x.strip() for x in open(Dicts, 'r', encoding='utf-8').readlines()]))
-
+'''IP 黑名单'''
+DDicts = os.path.join('Auxiliary','Black_Con.list')
+black_con = list(set([x.strip() for x in open(DDicts, 'r', encoding='utf-8').readlines()]))
+'''网页内容黑名单'''
+DDDicts = os.path.join('Auxiliary','Black_Url.list')
+black_url = list(set([x.strip() for x in open(DDDicts, 'r', encoding='utf-8').readlines()]))
+'''网址黑名单'''
 
 def Except_Log(stat,url,error):
-    print('错误代码 [{}] {}'.format(stat,str(error)))
+    '''日志保存函数'''
+    print('[+ Error Log] 错误代码 [{}] {}'.format(stat,str(error)))
     try:
         Error_Log.objects.create(url=url, error='错误代码 [{}] {}'.format(stat,str(error)))
     except:
@@ -45,8 +52,48 @@ def Except_Log(stat,url,error):
         Error_Log.objects.create(url=url, error='错误代码 [{}] {}'.format(stat,str(error)))
 
 def close_old_connections():
+    '''维持数据库心跳包'''
     for conn in connections.all():
         conn.close_if_unusable_or_obsolete()
+
+'''2019-12-10
+    1. 新增一个功能，如果当数据库的所有网址都爬完了，则重启爬虫，设置所有网址为未爬行状态
+    2. 新增一个功能，网页内容黑名单过滤函数
+'''
+import configparser
+cfg = configparser.ConfigParser()
+cfg.read('config.ini')
+host = cfg.get("Server", "host")
+username = cfg.get("Server", "username")
+password = cfg.get("Server", "password")
+Dbname = cfg.get("Server","dbname").lower()
+port = int(cfg.get("Server","port"))
+@contextlib.contextmanager
+def ResetCrawl(db=Dbname):
+    print('[+ Reset Crawl] 开始重启爬虫')
+    try:
+        conn = pymysql.connect(host=host,user=username,password=password,port=port,db=db,charset='utf8')
+        cursor = conn.cursor()
+        cursor.execute('update url set `get`="否"')
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        Except_Log(stat=78,url='爬虫重启失败',error=str(e))
+
+
+def check_black(content,black_list):
+    '''
+    该函数功能仅为网页内容黑名单过滤
+    :param content: 传入网页内容
+    :param black_list: 传入网页内容黑名单
+    :return: 如果黑名单的内容出现在网页内容，则会返回True
+    '''
+    res = [True if x in content else False for x in black_list]
+    if True in res:
+        return True
+    else:
+        return False
 
 
 Set = Setting.objects.all()[0]
@@ -55,7 +102,7 @@ Alive_Status = eval(Set.Alive_Code)
 
 BA = Domains.objects.all()
 ALL_DOMAINS = [x.get('url') for x in BA.values()]
-
+'''获取所有监控域名列表'''
 
 
 
@@ -90,21 +137,30 @@ def get_host(url):
 
 
 def Add_Data_To_Url(url):
+    '''
+    2019-12-10
+        1. 该函数作用为传入网址进行IP黑名单过滤
+        2. 该函数作用为传入网址进行【网络资产数据入库，网址索引数据入库，主机资产数据入库，监控域名数量入库处理】
+    '''
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
     close_old_connections()
+    print('[+ Insert Url] 入库网址 : {}'.format(url))
     if '.gov.cn' in url or '.edu.cn' in url:
+        return
+    urlinblackurl = check_black(url,black_url)
+    if urlinblackurl == True:
+        print('[+ URL Blacklist] 当前网址触发黑名单 : {}'.format(url))
         return
     try:
         ip = get_host(url)
         if ip == '获取失败':
             return
         if ip in black_ip:
-            # print('{} : {}所属IP触发IP黑名单 已过滤'.format(url,ip))
+            '''触发IP黑名单机制'''
+            print('[+ IP Blacklist] 当前IP触发黑名单 : {} --> {}'.format(ip,url))
             return
-        # print('[+ Domain UrlIP] IP解析 --> {}  IP --> {}'.format(url, ip))
-       #  Sem.acquire()
         try:
             test_url = list(URL.objects.filter(url=url))
         except:
@@ -114,14 +170,13 @@ def Add_Data_To_Url(url):
                 close_old_connections()
                 test_url = list(URL.objects.filter(url=url))
 
-        # Sem.release()
-        # 如果数据库有这个网站的话，就直接退出
         if test_url != []:
+            '''网址索引表如果已经有该网址，则直接退出'''
             return
 
         try:
             Test_Other_Url = Other_Url.objects.filter(url=url)
-            # 判断网络资产表是否有这个数据，如果没有的话，就添加进去
+            '''判断网络资产表是否有这个数据，如果没有的话，就添加进去'''
             if list(Test_Other_Url) == []:
                 res = Get_Url_Info(url).get_info()
                 res_url = res.get('url')
@@ -143,30 +198,30 @@ def Add_Data_To_Url(url):
         except Exception as e:
             Except_Log(stat=29, url=url + '|网络资产表错误', error=str(e))
         try:
-            # res = Get_Url_Info(url).get_info()
-            # res_status = res.get('status')
-            # 再次获取状态码，判断是否符合入库状态，以保证数据统一
-            # if int(res_status) not in Alive_Status:
-            #     return
-
-            # 接下来可以进行数据索引唯一统一
             '''
+            再次获取状态码，判断是否符合入库状态，以保证数据统一
             这里添加网址资产到 索引表 和 清洗表
             '''
             test_url1 = list(URL.objects.filter(url=url))
-            # 如果数据库有这个网站的话，就直接退出
-
+            '''如果网址索引表有这个网站的话，就直接退出'''
             if test_url1 == []:
                 URL.objects.create(url=url,ip=ip)
-                # 添加 网址索引
+                '''添加网址到网址索引表'''
                 try:
                     try:
-                        Sconten = Get_Url_Info(url).Requests()[0]
+                        ZHRND = Get_Url_Info(url)
+                        Sconten = ZHRND.get_info()['content']
                         if Sconten == 'Error':
+                            '''到这里说明获取网页内容失败了'''
+                            # print('{}:获取网页内容失败'.format(url))
                             pass
                         else:
                             try:
-                                Sconten = Sconten.decode()
+                                blackconincon = check_black(Sconten,black_con)
+                                if blackconincon == True:
+                                    '''触发网页内容黑名单'''
+                                    print('[+ Cont Blacklist] 当前网页内容触发黑名单 : {}'.format(url))
+                                    return None
                             except:
                                 Sconten = '获取失败'
                         Show_contents = pymysql.escape_string(Sconten)
@@ -188,14 +243,14 @@ def Add_Data_To_Url(url):
                         Show_cs = IP_Res.get_cs_name(ip)
                         Cont.save()
                         Show_Data.objects.create(url=url, ip=ip,cs=Show_cs, content=Cont)
-                    # 添加网页内容，数据展示
+                        '''添加网页内容，数据展示'''
                 except Exception as e:
                     Except_Log(stat=8, url=url + '|外键添加错误', error=str(e))
 
             This_Sub = [x for x in ALL_DOMAINS if x in url]
-                # 获取到当前子域名属于的主域名
+            '''获取到当前子域名属于的主域名'''
             try:
-                # 尝试进行域名总数据获取检测
+                '''尝试进行域名总数据获取检测'''
                 if This_Sub != []:
                         Domain_Count = Domains.objects.filter(url=This_Sub[0])[0]
                         counts = Other_Url.objects.filter(url__contains=This_Sub[0])
@@ -214,13 +269,13 @@ def Add_Data_To_Url(url):
         except:
             close_old_connections()
             test_ip = list(IP.objects.filter(ip=ip))
-        # 开始添加ip 维护ip统一
-        # 这里开始判断数据库中是否有这个ip，并且先添加然后修改(防止重复浪费资源)
-        # if test_ip != []:
-        #     test_ip_0 = IP.objects.filter(ip=ip)[0]
-        #     # 这里判断数据中IP时候存在，如果存在并且有扫描状态，就直接中断操作
-        #     if test_ip_0.get == '是' or test_ip_0.get == '中':
-        #         return
+            '''开始添加ip 维护ip统一
+            这里开始判断数据库中是否有这个ip，并且先添加然后修改(防止重复浪费资源)
+            if test_ip != []:
+                test_ip_0 = IP.objects.filter(ip=ip)[0]
+                # 这里判断数据中IP时候存在，如果存在并且有扫描状态，就直接中断操作
+                if test_ip_0.get == '是' or test_ip_0.get == '中':
+                    return'''
         if test_ip ==[]:
             try:
                 IP_Res = Get_Ip_Info(ip)
@@ -228,9 +283,9 @@ def Add_Data_To_Url(url):
                 cs_name = IP_Res.get_cs_name(ip)
                 try:
                     IP.objects.create(ip=ip, servers='None', host_type='None', cs=cs_name,alive_urls='None', area=area)
-                    # 这里先添加数据，异步执行获取到的数据作为结果给下个进程使用
-                    # 这里本来是要扫描c段开放端口，但是这样就相当于把耗时操作加载到同步执行的线程中
-                    # 于是把扫描开放端口  放在获取ip详细信息线程中处理
+                    '''这里先添加数据，异步执行获取到的数据作为结果给下个进程使用
+                    这里本来是要扫描c段开放端口，但是这样就相当于把耗时操作加载到同步执行的线程中
+                    于是把扫描开放端口  放在获取ip详细信息线程中处理'''
                 except Exception as e:
                     Except_Log(stat=86, url=url + '|转换IP地区编码失败|', error=str(e))
                     IP.objects.create(ip=ip, servers='None', host_type='None', cs=cs_name,alive_urls='None', area='获取失败')
@@ -246,15 +301,15 @@ def Add_Data_To_Url(url):
 
 
 def Change_IP_Info():
-        time.sleep(random.randint(1,20))
-        time.sleep(random.randint(1,20))
-        time.sleep(random.randint(1,20))
-        time.sleep(random.randint(1,20))
-        time.sleep(random.randint(1,20))
-        time.sleep(random.randint(1,20))
-        time.sleep(random.randint(1,20))
-        time.sleep(random.randint(1,20))
-        time.sleep(random.randint(1,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
         # 首先捕获一个值，设置为扫描中状态，但是要确保是事务
         try:
             target_ip = IP.objects.filter(get='否')[0]
@@ -264,9 +319,9 @@ def Change_IP_Info():
             # 但是有时候 数据没有正常跑出来 设置成 【是】 会导致偏差
             target_ip.save()
         except Exception as e:
-            Except_Log(stat=19, url='|扫描IP资产并设置扫描状态失败|', error='获取预扫描IP失败')
             time.sleep(360)
             # 等待并充实一次
+            Except_Log(stat=19, url='|扫描IP资产并设置扫描状态失败|', error='获取预扫描IP失败')
             return
 
         try:
@@ -372,8 +427,9 @@ def Change_IP_Info():
 
 
 def Change_ShowData_Info(Sub_Domains):
+    '''该函数作用是对数据展示进行清洗整理'''
     try:
-        time.sleep(300)
+        time.sleep(360)
         try:
             target_info = Show_Data.objects.filter(success='否')[0]
             ip = target_info.ip
@@ -399,9 +455,9 @@ def Change_ShowData_Info(Sub_Domains):
                 target_info.get = '中'
                 target_info.save()
         except Exception as e:
-            Except_Log(stat=35, url='|清洗数据并设置扫描状态失败|', error='获取预清洗数据失败')
-            time.sleep(300)
+            time.sleep(360)
             # 等待并充实一次
+            Except_Log(stat=35, url='|清洗数据并设置扫描状态失败|', error='获取预清洗数据失败')
             return
         print('[+ DataInfo Collection] 数据整理清洗 : {} --> {}'.format(url,ip))
 
@@ -475,9 +531,9 @@ def Change_ShowData_Info(Sub_Domains):
 
 def Run_Crawl(Domains):
     Domains = ['.'+str(x) for x in Domains]
-    time.sleep(random.randint(1, 20))
-    time.sleep(random.randint(1, 20))
-    time.sleep(random.randint(1, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
     try:
         target_url = URL.objects.filter(get='否')[0]
         url = target_url.url
@@ -488,6 +544,7 @@ def Run_Crawl(Domains):
         time.sleep(600)
         Except_Log(stat=31, url='|获取URL并设置扫描状态失败|', error='获取预爬行网址失败')
         # 在获取失败（数据库没数据存入），重试一次
+        ResetCrawl(db=Dbname)
         return
 
     try:
@@ -544,6 +601,7 @@ def Run_Crawl(Domains):
 
 
 def Heartbeat():
+    '''维持 2 S 发送一次心跳包检测连接，如果失败则清洗连接'''
     while 1:
         try:
             heartcheck = list(URL.objects.all())
@@ -551,7 +609,7 @@ def Heartbeat():
                 time.sleep(60)
             else:
                 time.sleep(2)
-            # 维持 2 S 发送一次心跳包检测连接，如果失败则清洗连接
+
         except:
             print('[+ HeartBeat] 维持心跳包失败，清洗失败链接')
             close_old_connections()
@@ -566,7 +624,7 @@ def Sub_Api(Sub_Domains):
             if res != [] and res != None:
                 with ThreadPoolExecutor(max_workers=pool_count) as pool4:
                     result = pool4.map(Add_Data_To_Url, list(set(res)))
-            time.sleep(60)
+            time.sleep(5)
             # 每次扫完一个域名等待一小会儿
         time.sleep(3600 * 48)
 
@@ -579,7 +637,7 @@ def Sub_Baidu(Sub_Domains):
             if res != []:
                 with ThreadPoolExecutor(max_workers=pool_count) as pool3:
                     result = pool3.map(Add_Data_To_Url, list(set(res)))
-            time.sleep(60)
+            time.sleep(5)
             # 每次扫完一个域名等待一小会儿
         time.sleep(3600*24)
 
@@ -590,11 +648,12 @@ def Sub_Brute(Sub_Domains):
             Br = Brute(domain)
             res = Br.start()
             res = list(set(res))
-            if res != []:
+            rese = [x for x in res if domain in x ]
+            if rese != []:
                 with ThreadPoolExecutor(max_workers=pool_count) as pool4:
-                    result = pool4.map(Add_Data_To_Url, res)
+                    result = pool4.map(Add_Data_To_Url, rese)
             # 每爆破一个子域名，歇会儿
-            time.sleep(60)
+            time.sleep(5)
         time.sleep(3600*48)
 
 

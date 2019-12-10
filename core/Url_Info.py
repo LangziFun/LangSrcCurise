@@ -93,6 +93,8 @@ class Get_Url_Info:
 
     def get_info(self):
         req = self.Requests()
+        if req[0] == 'Error':
+            req = self.Requests()
         content = req[0]
         headers = req[1]
         status = req[2]
@@ -119,11 +121,11 @@ class Get_Url_Info:
         return self.result
 
 if __name__ == '__main__':
-    print(Get_Url_Info('https://www.163.com').Requests()[0])
-    a = Get_Url_Info('https://www.163.com')
-    print(a.get_info())
+    #print(Get_Url_Info('https://dxiyi.taobao.com/').Requests()[0].decode())
+    a = Get_Url_Info('https://170.taobao.com')
+    print(a.get_info()['content'])
     # '''
-    # 传入数据为 网址
+    # 传入数据为 网址https://dxiyi.taobao.com/
     # 返回数据为
     # {
     # url 网址

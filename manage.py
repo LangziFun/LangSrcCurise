@@ -36,6 +36,7 @@ with co_mysql(db='mysql') as cursor:
    else:
        cursor.execute('create database {} DEFAULT CHARSET=utf8mb4'.format(Dbname))
        cursor.execute("SET @@global.sql_mode= '';")
+       cursor.execute("ALTER DATABASE {} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;".format(Dbname))
 
 if __name__ == '__main__':
     import multiprocessing
