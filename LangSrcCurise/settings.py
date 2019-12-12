@@ -102,7 +102,10 @@ DATABASES = {
         'USER': username,
         'PASSWORD': password,
         'PORT': str(port),
-        'CONN_MAX_AGE':None
+        'CONN_MAX_AGE':None,
+        'OPTIONS': {
+            'init_command': "SET sql_mode='TRADITIONAL'"
+        }
 
     }
 }
