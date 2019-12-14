@@ -10,7 +10,7 @@ import requests
 import re
 requests.packages.urllib3.disable_warnings()
 import time
-
+from concurrent.futures import ThreadPoolExecutor
 import django
 import os
 import sys
@@ -19,7 +19,7 @@ sys.path.insert(0,pathname)
 sys.path.insert(0,os.path.abspath(os.path.join(pathname,'..')))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","LangSrcCurise.settings")
 django.setup()
-from app.models import Setting
+from app.models import Setting,Domains
 
 Set = Setting.objects.all()[0]
 processes = int(Set.processes)
@@ -29,6 +29,10 @@ childconcurrency = int(Set.childconcurrency)
 Dicts = os.path.join('Auxiliary','Black_Url.list')
 
 black_list = list(set([x.strip() for x in open(Dicts, 'r', encoding='utf-8').readlines()]))
+
+BA = Domains.objects.all()
+Sub_Domains = [x.get('url') for x in BA.values()]
+
 def check_black(url):
     res = [True if x in url else False for x in black_list]
     if True in res:
@@ -39,6 +43,33 @@ def check_black(url):
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
+
+# @from OneForAll
+def matchsubdomain(subdomains, html):
+    results = set()
+    """
+    COME FROM BY:https://github.com/shmilylty/OneForAll/blob/master/oneforall/common/module.py
+            thanks for shmilylty~
+
+    正则匹配出子域
+    :param str domain: 域名
+    :param str html: 要匹配的html响应体
+    :param bool distinct: 匹配结果去除
+    :return: 匹配出的子域集合或列表
+    :rtype: set or list
+    """
+    for subdomain in subdomains:
+        regexp = r'(?:\>|\"|\'|\=|\,)(?:http\:\/\/|https\:\/\/)?' \
+                 r'(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.){0,}' \
+                 + subdomain.replace('.', r'\.')
+        result = re.findall(regexp, html, re.I)
+        deal = map(lambda s: re.sub('"', '', s[1:].lower()), result)
+        for dea in deal:
+            if 'http' not in deal:
+                results.add('http://'+dea)
+            else:
+                results.add(dea)
+    return list(set(results))
 
 # @from JSFinder
 def extract_URL(JS):
@@ -321,6 +352,7 @@ def Crawl_Links(url):
     except:
         pass
 
+
     result_list = list(set(result_list))
     subdomains = Get_Subdomain(url)
     if subdomains:
@@ -340,32 +372,59 @@ def Crawl_Links(url):
 
 
     # 返回数据是完整的url，并且经过了存活性检测
+    return success_list
 
-    returl_list = set()
-    for u in success_list:
-        try:
-            UA = random.choice(headerss)
-            headers = {'User-Agent': UA, 'Connection': 'close'}
-            r = requests.get(url=u, headers=headers, verify=False, timeout=timeout)
-            time.sleep(0.1)
-            try:
-                if b'Service Unavailable' not in r.content and b'The requested URL was not found on' not in r.content and b'The server encountered an internal error or miscon' not in r.content:
-                    if r.status_code in Alive_Status:
-                        real_url = r.url.rstrip('/')
-                        returl_list.add(urlparse(real_url).scheme + '://' + urlparse(real_url).netloc)
-            except:
-                pass
-        except:
-            pass
-    print('[+ Crawl UrlLinks] 爬行网址: {} 友链存活数量 : {}'.format(url,len(returl_list)))
-    return list(returl_list)
+def Requests(url):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
+    try:
+        r = requests.get(url=url, headers=headers, timeout=10)
+        if b'Service Unavailable' not in r.content and b'The requested URL was not found on' not in r.content and b'The server encountered an internal error or miscon' not in r.content:
+            if r.status_code in Alive_Status:
+                u = urlparse(str(r.url))
+                return u.scheme + '://' + u.netloc
+    except:
+        pass
+    try:
+        r = requests.get(url=url.replace('http://', 'https://'), headers=headers, verify=False, timeout=10)
+        if b'Service Unavailable' not in r.content and b'The requested URL was not found on' not in r.content and b'The server encountered an internal error or miscon' not in r.content:
+            if r.status_code in Alive_Status:
+                u = urlparse(str(r.url))
+                return u.scheme + '://' + u.netloc
+    except:
+        return None
+
+def Get_Alive_Url(urls):
+    with ThreadPoolExecutor() as p:
+        future_tasks = [p.submit(Requests, i) for i in urls]
+    result = [obj.result() for obj in future_tasks if obj.result() is not None]
+    return result
+
+
+
 
 def Crawl(url):
-    result = Crawl_Links(url)
-    if result == None or result == []:
-        return []
+    result1 = Crawl_Links(url)
+    try:
+        UA = random.choice(headerss)
+        headers = {'User-Agent': UA, 'Connection': 'close'}
+        r = requests.get(url=url, headers=headers, verify=False, timeout=timeout)
+        encoding = requests.utils.get_encodings_from_content(r.text)[0]
+        res = r.content.decode(encoding, 'replace')
+        result2 = matchsubdomain(Sub_Domains,res)
+        result1.extend(result2)
+    except:
+        pass
+
+    if result1 != []:
+        result = Get_Alive_Url(list(result1))
+        print('[+ Crawl UrlLinks] 爬行网址: {} 友链存活数量 : {}'.format(url,len(result)))
+        if result == None or result == []:
+            return []
+        else:
+            return result
     else:
-        return result
+        return []
 
 if __name__ == '__main__':
     r = Crawl('http://www.langzi.fun')

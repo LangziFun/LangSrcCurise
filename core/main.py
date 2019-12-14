@@ -70,12 +70,16 @@ Dbname = cfg.get("Server","dbname").lower()
 port = int(cfg.get("Server","port"))
 @contextlib.contextmanager
 def ResetCrawl(db=Dbname):
-    print('[+ Reset Crawl] 开始重启爬虫')
     try:
         conn = pymysql.connect(host=host,user=username,password=password,port=port,db=db,charset='utf8')
         cursor = conn.cursor()
-        cursor.execute('update URL set `get`="否"')
+        cursor.execute('select count(url) from URL where `get`="否"')
         conn.commit()
+        res = cursor.fetchone()[0]
+        if str(res) == '0':
+            print('[+ Reset Crawl] 开始重启爬虫')
+            cursor.execute('update URL set `get`="否"')
+            conn.commit()
         cursor.close()
         conn.close()
     except Exception as e:
@@ -142,6 +146,14 @@ def Add_Data_To_Url(url):
         1. 该函数作用为传入网址进行IP黑名单过滤
         2. 该函数作用为传入网址进行【网络资产数据入库，网址索引数据入库，主机资产数据入库，监控域名数量入库处理】
     '''
+    time.sleep(random.randint(5,20))
+    time.sleep(random.randint(5,20))
+    time.sleep(random.randint(5,20))
+    time.sleep(random.randint(5,20))
+    time.sleep(random.randint(5,20))
+    time.sleep(random.randint(5,20))
+    time.sleep(random.randint(5,20))
+    time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
@@ -301,6 +313,10 @@ def Add_Data_To_Url(url):
 
 
 def Change_IP_Info():
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
+        time.sleep(random.randint(10,20))
         time.sleep(random.randint(10,20))
         time.sleep(random.randint(10,20))
         time.sleep(random.randint(10,20))
@@ -531,6 +547,15 @@ def Change_ShowData_Info(Sub_Domains):
 
 def Run_Crawl(Domains):
     Domains = ['.'+str(x) for x in Domains]
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
+    time.sleep(random.randint(10, 20))
     time.sleep(random.randint(10, 20))
     time.sleep(random.randint(10, 20))
     time.sleep(random.randint(10, 20))

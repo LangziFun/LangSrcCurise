@@ -76,12 +76,12 @@ class Other_Url(models.Model):
         verbose_name_plural = verbose_name
 
 class Setting(models.Model):
-    name = models.CharField(max_length=30,default='萌萌哒屎壳郎一号方案',verbose_name='配置方案')
+    name = models.CharField(max_length=60,default='萌萌哒屎壳郎二号方案高级配置',verbose_name='配置方案')
     Alive_Code = models.CharField(max_length=250,default='[200,204,206,301,302,304,401,402,403,404,500,501,502,503]',verbose_name='允许入库状态码')
-    Thread = models.CharField(max_length=4,default='2', verbose_name='线程数量')
+    Thread = models.CharField(max_length=4,default='4', verbose_name='线程数量')
     Pool = models.CharField(max_length=4,default='4',  verbose_name='线程池量')
-    processes = models.CharField(max_length=4,default='4',  verbose_name='进程数量')
-    childconcurrency = models.CharField(max_length=4,default='8',  verbose_name='子协程数量')
+    processes = models.CharField(max_length=4,default='6',  verbose_name='进程数量')
+    childconcurrency = models.CharField(max_length=4,default='16',  verbose_name='子协程数量')
     change_time = models.DateTimeField(auto_now=True,verbose_name='修改时间')
     class Meta:
         db_table = 'Setting'

@@ -31,8 +31,10 @@ Alive_Status = eval(Set.Alive_Code)
 childconcurrency = int(Set.childconcurrency)
 
 Dicts = os.path.join('Auxiliary','SubDomainDict.list')
-#Dicts = 'SubDomainDict.list'
 sub_lists = list(set([x.strip() for x in open(Dicts,'r').readlines()]))
+
+DDicts = os.path.join('Auxiliary','NextSubDomainDict.list')
+Next_sub_lists = list(set([x.strip() for x in open(Dicts,'r').readlines()]))
 
 
 cert_path = os.path.join('Auxiliary','cacert.pem')
@@ -139,12 +141,35 @@ class Brute:
 
     def get_result_from_dns_result(self,loop):
         # 返回结果是通过DNS查询获取的子域名
-        result = loop.run_until_complete(self.get_result_from_dns(self.dicts))
+        # result = loop.run_until_complete(self.get_result_from_dns(self.dicts))
+        # return result
+        # 2019-12-14 因为字典的数量变大，一次性爆破2w+的子域名会出现假死状态
+        # 分割任务进行扫描
+        result = []
+        try:
+            dict_counts = len(self.dicts)
+            dicts = self.dicts
+            use_dicts = []
+            if dict_counts > 5000:
+                start_count = dict_counts // 5000
+                end_count = dict_counts / 5000
+                if end_count > start_count:
+                    counts = start_count + 1
+                else:
+                    counts = start_count
+                for i in range(counts + 1):
+                    use_dicts.append((dicts[5000 * i:5000 * (i + 1)]))
+            else:
+                use_dicts = dicts
+            for use in use_dicts:
+                if use != []:
+                    result1 = loop.run_until_complete(self.get_result_from_dns(use))
+                    result.extend(result1)
+        except:
+            pass
+        result = list(set(result))
         return result
-        # if len(result) > 1329: # 泛解析
-        #     return random.sample(result,10)
-        # else:
-        #     return result
+
 
     async def main(self,urls):
         async with aiomultiprocess.Pool(processes=processes,childconcurrency=childconcurrency) as pool:
@@ -161,9 +186,26 @@ class Brute:
             print('[+ Cert Search] 查询 : {} SSL证书查询获取总子域名数量 : {}'.format(self.domain, len(Cert_Domain_Counts)))
             brute_domains.extend(Cert_Domain_Counts)
         print('[+ Brute Subdomain] 爆破 : {} 暴力破解获取总子域名数量 : {}'.format(self.domain,len(brute_domains)))
+
+        '''2019-12-14
+        今天开开心心，想着把爆破三级子域名加入~
+        但是发现字典被写死了，55555~~~~
+        不想重构，好在三级子域名不算太多，直接把结果加载到测试存活的验证池中，即直接使用http请求测试存活
+        55555~~等找到女朋友就全部重写
+        '''
+        # nextsub_urls = set()
+        # for ne in Next_sub_lists:
+        #     for xt in brute_domains:
+        #         nextsub_urls.add(ne+'.'+xt)
+        #         这样写，扫描任务直接爆炸~~~
         alive_urls = loop.run_until_complete(self.main(brute_domains))
+        if alive_urls != []:
+            for ne in Next_sub_lists:
+                ex = [ne +'.'+x.split('//')[1] for x in alive_urls]
+                xts = loop.run_until_complete(self.main(ex))
+                alive_urls.extend(xts)
         print('[+ Alive Subdomain] 存活 : {} 暴力破解获取子域存活数量 : {}'.format(self.domain,len(alive_urls)))
-        return alive_urls
+        return list(set(alive_urls))
 
 
 if __name__ == '__main__':

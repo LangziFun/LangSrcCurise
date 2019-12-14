@@ -12,7 +12,8 @@ import time
 from urllib.parse import quote,urlparse
 requests.packages.urllib3.disable_warnings()
 timeout = 15
-
+from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor
 import random
 
 import django
@@ -64,30 +65,33 @@ headerss = [
     "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24"]
 
 
+
+def RetUrl(url):
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
+        r = requests.get(url,headers)
+        u = urlparse(str(r.url))
+        return u.scheme + '://' + u.netloc
+    except Exception as e:
+        return None
+
 def Get_Resp(url):
-    #headers = {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate, br', 'Accept-Language': 'zh,zh-CN;q=0.9,en-US;q=0.8,en;q=0.7',  'Cookie': 'BAIDUID=832CF61CDAEF34C68E7CA06F591DF82A:FG=1; BIDUPSID=832CF61CDAEF34C68E7CA06F591DF82A; PSTM=1544962484; BD_UPN=12314753; __cfduid=db8c5e5983dc88b6b6b050ae548fbb7691556284097; H_WISE_SIDS=126125_127760_100807_135112_132060_135375_132550_120124_134719_132909_131247_122155_132439_130763_132378_131518_118879_118863_118856_118831_118792_107318_132783_134391_133351_132553_129652_132250_124893_128967_135346_133472_133838_133847_132552_134460_134319_134752_129645_131423_134665_134614_134029_134710_110085_134525_134155_127969_131951_131296_127417_134151_132468; BDORZ=B490B5EBF6F3CD402E515D22BCDA1598; sug=3; sugstore=1; ORIGIN=2; bdime=0; H_PS_PSSID=1453_21088_29523_29520_29098_29568_29221; delPer=0; BD_CK_SAM=1; PSINO=3; H_PS_645EC=4dbarFQevDh8Ep8JI9ziasOWlwrzN0L51q7gbGWsv5qAc10DvcdI%2F%2BQtcWo; BDSVRTM=151; COOKIE_SESSION=43_0_8_7_4_9_0_4_7_4_1_0_686925_0_0_0_1564749230_0_1566535736%7C9%230_1_1559812936%7C1', 'Host': 'www.baidu.com', 'is_pbs': 'site%3Abaidu.com', 'is_referer': 'https://www.baidu.com/s?wd=site%3Abaidu.com&pn=10&oq=site%3Abaidu.com&ie=utf-8&usm=1&rsv_idx=1&rsv_pq=e30afae6000592c2&rsv_t=6982O0bJr85Gwx%2Fqgo8X7V94%2FHfetEfbyNDSih3hJgDF40LXKT6zHLFdbyw&bs=site%3Abaidu.com', 'is_xhr': '1', 'Referer': 'https://www.baidu.com/s?wd=site%3Abaidu.com&pn=20&oq=site%3Abaidu.com&ie=utf-8&usm=1&rsv_idx=1&rsv_pq=993ebd5c00000988&rsv_t=4dbarFQevDh8Ep8JI9ziasOWlwrzN0L51q7gbGWsv5qAc10DvcdI%2F%2BQtcWo', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36', 'X-Requested-With': 'XMLHttpRequest'}
     try:
         r = requests.get(url,timeout=10,verify=False)
-        #print(r.content)
-        return r.content
+        if r.content.startswith(b'<!DOCTYPE html>\n<!--STATUS OK-->\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n'):
+            cont = r.content
+            return cont
+        else:
+            baidu_url = url.split('//')[1].split('/')[0]
+            baidu_server = random.choice(servers)
+            url = url.replace(baidu_url, baidu_server)
+            return Get_Resp(url)
     except Exception as e:
-        #print(e)
         baidu_url = url.split('//')[1].split('/')[0]
         baidu_server = random.choice(servers)
         url = url.replace(baidu_url,baidu_server)
-        # print('替换地址:'+str(url))
-        Get_Resp(url)
+        return Get_Resp(url)
 
-
-# def Get_Resp(url):
-#     headers = {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate, br', 'Accept-Language': 'zh,zh-CN;q=0.9,en-US;q=0.8,en;q=0.7', 'Connection': 'keep-alive', 'Cookie': 'BAIDUID=832CF61CDAEF34C68E7CA06F591DF82A:FG=1; BIDUPSID=832CF61CDAEF34C68E7CA06F591DF82A; PSTM=1544962484; BD_UPN=12314753; __cfduid=db8c5e5983dc88b6b6b050ae548fbb7691556284097; H_WISE_SIDS=126125_127760_100807_135112_132060_135375_132550_120124_134719_132909_131247_122155_132439_130763_132378_131518_118879_118863_118856_118831_118792_107318_132783_134391_133351_132553_129652_132250_124893_128967_135346_133472_133838_133847_132552_134460_134319_134752_129645_131423_134665_134614_134029_134710_110085_134525_134155_127969_131951_131296_127417_134151_132468; BDORZ=B490B5EBF6F3CD402E515D22BCDA1598; sug=3; sugstore=1; ORIGIN=2; bdime=0; H_PS_PSSID=1453_21088_29523_29520_29098_29568_29221; delPer=0; BD_CK_SAM=1; PSINO=3; H_PS_645EC=4dbarFQevDh8Ep8JI9ziasOWlwrzN0L51q7gbGWsv5qAc10DvcdI%2F%2BQtcWo; BDSVRTM=151; COOKIE_SESSION=43_0_8_7_4_9_0_4_7_4_1_0_686925_0_0_0_1564749230_0_1566535736%7C9%230_1_1559812936%7C1', 'Host': 'www.baidu.com', 'is_pbs': 'site%3Abaidu.com', 'is_referer': 'https://www.baidu.com/s?wd=site%3Abaidu.com&pn=10&oq=site%3Abaidu.com&ie=utf-8&usm=1&rsv_idx=1&rsv_pq=e30afae6000592c2&rsv_t=6982O0bJr85Gwx%2Fqgo8X7V94%2FHfetEfbyNDSih3hJgDF40LXKT6zHLFdbyw&bs=site%3Abaidu.com', 'is_xhr': '1', 'Referer': 'https://www.baidu.com/s?wd=site%3Abaidu.com&pn=20&oq=site%3Abaidu.com&ie=utf-8&usm=1&rsv_idx=1&rsv_pq=993ebd5c00000988&rsv_t=4dbarFQevDh8Ep8JI9ziasOWlwrzN0L51q7gbGWsv5qAc10DvcdI%2F%2BQtcWo', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36', 'X-Requested-With': 'XMLHttpRequest'}
-#     try:
-#         r = requests.get(url,headers=headers,timeout=20,verify=False)
-#         #print(r.content)
-#         return r.content
-#     except Exception as e:
-#         #print(e)
-#         return None
 
 def Crawl_Bing(domain):
     result = set()
@@ -141,66 +145,27 @@ def Crawl_Sougou(domain):
             pass
     print('[+ Sougou Search] 搜狗搜索 : {} 捕获子域名总数 : {}'.format(domain,len(result)))
     return list(result)
-
 def Cralw_Baidu(domainkey):
     '''
     传递参数为子域名
     返回的是存在存在子域名的完整网址
     '''
     result = set()
-    domain = domainkey.encode()
+    res = []
     for page in range(0,500,10):
-        #time.sleep(random.randint(2,6))
         url = 'http://www.baidu.com/s?wd=site%3A{}&pn={}'.format(quote(domainkey),page)
-        #print(url)
         try:
             resp = Get_Resp(url)
-            # if not resp:
-            #     resp = Get_Resp(url)
-            if resp:
-                subdomain = re.findall(b'-decoration:none;">(.*?)/&nbsp',resp)
-                for x in subdomain:
-                    #print(b'1111111:'+x)
-                    if domain in x:
-                        if b'http' in x:
-                            if b'..' in x:
-                                result.add(x.decode().split('..')[0].rstrip('/'))
-                            else:
-                                result.add(x.decode().rstrip('/'))
-                            if b'&' in x:
-                                result.add(x.decode().split('&')[0].rstrip('/'))
-                            else:
-                                result.add(x.decode().rstrip('/'))
-
-                        else:
-                            if b'..' in x:
-                                result.add('http://'+x.decode().split('..')[0].rstrip('/'))
-                            else:
-                                result.add('http://'+x.decode().rstrip('/'))
-                            if b'&' in x:
-                                result.add('http://'+x.decode().split('&')[0].rstrip('/'))
-                            else:
-                                result.add('http://'+x.decode().rstrip('/'))
-
-                subdomain = re.findall(b'style="text-decoration:none;">(.*?)/.*?class="c-tools',resp)
-                for x in subdomain:
-                    #print(b'2222222:'+x)
-                    if domain in x:
-                        if b'http' in x:
-                            if b'..' in x:
-                                result.add(x.decode().split('..')[0].rstrip('/'))
-                            else:
-                                result.add(x.decode().rstrip('/'))
-                        else:
-                            if b'..' in x:
-                                result.add('http://' + x.decode().split('..')[0].rstrip('/'))
-                            else:
-                                result.add('http://' + x.decode().rstrip('/'))
+            bs = BeautifulSoup(resp, features='lxml')
+            for find_res in bs.find_all('a', {'class': 'c-showurl'}):
+                url = find_res.get('href')
+                result.add(url)
         except Exception as e:
-            #print(e)
             pass
-    res = (list(set(result)))
-    #print(res)
+    if result != {}:
+        with ThreadPoolExecutor() as pool:
+            res = pool.map(RetUrl,result)
+    res = list(set([x for x in res if x!=None]))
     print('[+ Baidu Search] 百度搜索 : {} 捕获子域名总数 : {}'.format(domainkey,len(res)))
     return res
 
