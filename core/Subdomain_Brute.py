@@ -88,10 +88,10 @@ class Brute:
 
     async def check_url_alive(self,url):
         # print('Scan:'+url)
-        async with asyncio.Semaphore(5000):
+        async with asyncio.Semaphore(2000):
             async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
                 try:
-                    async with session.get('http://'+url,timeout=15) as resp:
+                    async with session.get('http://'+url,timeout=15, ssl=False) as resp:
                         if resp.status in Alive_Status:
                             content = await resp.read()
                             #print(content)
@@ -102,7 +102,7 @@ class Brute:
                     #print(e)
                     pass
                 try:
-                    async with session.get('https://' + url,timeout=15) as resp:
+                    async with session.get('https://' + url,timeout=15, ssl=False) as resp:
                         if resp.status in Alive_Status:
                             content = await resp.read()
                             #print(content)

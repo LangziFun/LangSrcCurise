@@ -1,5 +1,6 @@
 # 更新
 
+- 2019-12-15:14点55分 优化下一级子域名爆破扫描流程
 - 2019-12-14:21点14分 修复重启爬虫函数，优化爬虫
 - 2019-12-13:22点11分 更新子域名字典[字典来自shmilylty](https://github.com/shmilylty/OneForAll/blob/master/oneforall/data/subnames.txt)，新增三级子域名爆破，爆破方式获取子域名数量更多，相对耗时更长
 - 2019-12-12:21点26分 修复百度搜索子域名结果
@@ -32,21 +33,21 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 
 通过初始化监控域名列表，自动循环执行如下任务：
 
-1. 通过  baidu          进行子域名采集
-2. 通过  bing           进行子域名采集
-3. 通过  sougou         进行子域名采集
-4. 通过  baidu          接口进行子域名采集
-5. 通过  sertsh         接口进行子域名采集
+1. 通过  baidu           进行子域名采集
+2. 通过  bing            进行子域名采集
+3. 通过  sougou          进行子域名采集
+4. 通过  baidu           接口进行子域名采集
+5. 通过  sertsh          接口进行子域名采集
 6. 通过  securitytrails  接口进行子域名采集
-7. 通过  Certspotter  接口进行子域名采集
-8. 通过  Ximcx  接口进行子域名采集
-9. 通过  Entrus  接口进行子域名采集
-10. 通过  Hackert  接口进行子域名采集
-11. 通过  Sitedossier  接口进行子域名采集
-12. 通过  Threatminer  接口进行子域名采集
+7. 通过  Certspotter     接口进行子域名采集
+8. 通过  Ximcx           接口进行子域名采集
+9. 通过  Entrus          接口进行子域名采集
+10. 通过  Hackert        接口进行子域名采集
+11. 通过  Sitedossier    接口进行子域名采集
+12. 通过  Threatminer    接口进行子域名采集
 4. 通过  ssl证书         进行子域名采集
-5. 通过  子域名爆破       进行二级，三级子域名采集
-6. 通过  对资产网址爬行   进行子域名采集
+5. 通过  子域名爆破      进行二级，三级子域名采集
+6. 通过  对资产网址爬行  进行子域名采集
 7. 通过  域名服务器      进行端口扫描，服务探测
 8. 通过  域名服务器      进行探测是否部署web服务
 9. 通过  域名服务器      进行其他数据清洗管理
@@ -126,12 +127,12 @@ Windows下推荐mysql.ini设置如下：
 	password = root
 	dbname = LangSrcCurise # 你要是用的数据库名字，数据库自动创建
 	[API]
-	securitytrails = P0Y308OO9qwf5jpk47bL0PCJ9AKs9seX
+	securitytrails = PWOSUIBIANXIEDE886X
 	# https://securitytrails.com 注册，免费账户一个月可以查询50次
 
 ## 初始化数据库
 
-在 LangSrcCurise 文件夹下依次执行如下命令：
+在主目录 LangSrcCurise 文件夹下依次执行如下命令：
 
 1. python3 manage.py makemigrations
 2. python3 manage.py migrate
@@ -151,7 +152,7 @@ Windows下推荐mysql.ini设置如下：
 
 完成将监控域名初始化到数据库
 
-**一些商城，旅游会使用大量的泛解析，所以需要自己适配黑名单过滤名单**
+**一些商城，旅游，同城等网站会使用大量的泛解析，所以需要自己适配黑名单过滤名单**
 
 ## 配置网址过滤黑名单
 
@@ -180,7 +181,7 @@ Windows下推荐mysql.ini设置如下：
 	
 	Auxiliary/NextSubDomainDict.list
 
-三级子域名爆破字典
+三级子域名爆破字典，来源同上
 
 ## 启动服务
 

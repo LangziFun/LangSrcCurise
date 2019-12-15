@@ -728,6 +728,7 @@ def Sub_ChangeInf(Sub_Domains):
 
 if __name__ == '__main__':
     pass
+    '''多喝热水'''
     #Domains = list(set([x.strip() for x in open('domains.list', 'r', encoding='utf-8').readlines()]))
     Domains = ['baidu.com','qq.com','jd.com','iqiyi.com','kuaishou.com','sina.com']
     res = Sub_Brute(Domains)
