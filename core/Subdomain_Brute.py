@@ -34,7 +34,7 @@ Dicts = os.path.join('Auxiliary','SubDomainDict.list')
 sub_lists = list(set([x.strip() for x in open(Dicts,'r').readlines()]))
 
 DDicts = os.path.join('Auxiliary','NextSubDomainDict.list')
-Next_sub_lists = list(set([x.strip() for x in open(Dicts,'r').readlines()]))
+Next_sub_lists = list(set([x.strip() for x in open(DDicts,'r').readlines()]))
 
 
 cert_path = os.path.join('Auxiliary','cacert.pem')
@@ -88,7 +88,7 @@ class Brute:
 
     async def check_url_alive(self,url):
         # print('Scan:'+url)
-        async with asyncio.Semaphore(2000):
+        async with asyncio.Semaphore(1000):
             async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
                 try:
                     async with session.get('http://'+url,timeout=15, ssl=False) as resp:
@@ -172,7 +172,7 @@ class Brute:
 
 
     async def main(self,urls):
-        async with aiomultiprocess.Pool(processes=processes,childconcurrency=childconcurrency) as pool:
+        async with aiomultiprocess.Pool() as pool:
             result = await pool.map(self.check_url_alive,urls)
         return [x for x in result if x is not None]
 
