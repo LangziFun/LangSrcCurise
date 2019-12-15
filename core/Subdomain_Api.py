@@ -102,16 +102,24 @@ def CertSh_Api(domain):
             domain_links.add('https://crt.sh/'+link.decode())
         for domain_link in domain_links:
             try:
-                r1 = requests.get(url=domain_link,timeout=20, verify=False)
+                r1 = requests.get(url=domain_link,timeout=30, verify=False)
                 if b'Subject&nbsp;Alternative&nbsp;Name:&nbsp;' in r1.content:
                     domains = re.findall(b'DNS:(.*?)<BR>', r1.content)
                     for domain_ in domains:
                         if domain in domain_.decode():
                             result.add(domain_.decode().replace('*.', ''))
             except Exception as e:
-                pass
+                try:
+                    r1 = requests.get(url=domain_link, timeout=20, verify=False)
+                    if b'Subject&nbsp;Alternative&nbsp;Name:&nbsp;' in r1.content:
+                        domains = re.findall(b'DNS:(.*?)<BR>', r1.content)
+                        for domain_ in domains:
+                            if domain in domain_.decode():
+                                result.add(domain_.decode().replace('*.', ''))
+                except:
+                    pass
     except Exception as e:
-        pass
+        return CertSh_Api(domain)
     print('[+ CertSh API] CertSh接口 : {} 捕获子域名总数 : {}'.format(domain, len(result)))
     return list(result)
 

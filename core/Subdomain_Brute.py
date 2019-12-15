@@ -88,7 +88,7 @@ class Brute:
 
     async def check_url_alive(self,url):
         # print('Scan:'+url)
-        async with asyncio.Semaphore(1000):
+        async with asyncio.Semaphore(5000):
             async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
                 try:
                     async with session.get('http://'+url,timeout=15) as resp:
@@ -193,18 +193,19 @@ class Brute:
         不想重构，好在三级子域名不算太多，直接把结果加载到测试存活的验证池中，即直接使用http请求测试存活
         55555~~等找到女朋友就全部重写
         '''
-        # nextsub_urls = set()
-        # for ne in Next_sub_lists:
-        #     for xt in brute_domains:
-        #         nextsub_urls.add(ne+'.'+xt)
-        #         这样写，扫描任务直接爆炸~~~
         alive_urls = loop.run_until_complete(self.main(brute_domains))
-        if alive_urls != []:
-            for ne in Next_sub_lists:
-                ex = [ne +'.'+x.split('//')[1] for x in alive_urls]
-                xts = loop.run_until_complete(self.main(ex))
-                alive_urls.extend(xts)
         print('[+ Alive Subdomain] 存活 : {} 暴力破解获取子域存活数量 : {}'.format(self.domain,len(alive_urls)))
+        return list(set(alive_urls))
+
+    def substart(self):
+        '''2019-12-15
+        1. 添加新功能，获取三级子域名，作为独立线程爆破-->添加到爬虫进程中处理
+        '''
+        multiprocessing.freeze_support()
+        loop = asyncio.get_event_loop()
+        Nextsubdomain_lists = [x + '.' + self.domain.split('//')[1] for x in Next_sub_lists]
+        alive_urls = loop.run_until_complete(self.main(Nextsubdomain_lists))
+        print('[+ Alive NextSubdomain] 存活 : {} 暴力破解获取下级子域存活数量 : {}'.format(self.domain,len(alive_urls)))
         return list(set(alive_urls))
 
 
