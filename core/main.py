@@ -575,7 +575,24 @@ def Run_Crawl(Domains):
     try:
         All_Urls = Crawl(url)
         if All_Urls == []:
+            try:
+                Br = Brute(url)
+                res = Br.substart()
+                res = list(set(res))
+                with ThreadPoolExecutor(max_workers=pool_count) as pool2:
+                    result = pool2.map(Add_Data_To_Url, list(res))
+            except Exception as e:
+                Except_Log(stat=65, url=url + '|下级子域名爆破失败|', error=str(e))
             return
+        else:
+            try:
+                Br = Brute(url)
+                res = Br.substart()
+                res = list(set(res))
+                with ThreadPoolExecutor(max_workers=pool_count) as pool2:
+                    result = pool2.map(Add_Data_To_Url, list(res))
+            except Exception as e:
+                Except_Log(stat=65, url=url + '|下级子域名爆破失败|', error=str(e))
         All_Urls = set(All_Urls)
         Other_Domains = []
         if list(All_Urls) != [] and All_Urls != None:
@@ -624,14 +641,7 @@ def Run_Crawl(Domains):
     except Exception as e:
         Except_Log(stat=32, url=url + '|网址爬行错误|', error=str(e))
 
-    try:
-        Br = Brute(url)
-        res = Br.substart()
-        res = list(set(res))
-        with ThreadPoolExecutor(max_workers=pool_count) as pool2:
-            result = pool2.map(Add_Data_To_Url, list(res))
-    except Exception as e:
-        Except_Log(stat=65, url=url + '|下级子域名爆破失败|', error=str(e))
+
 
 def Heartbeat():
     '''维持 2 S 发送一次心跳包检测连接，如果失败则清洗连接'''
