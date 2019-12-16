@@ -5,6 +5,9 @@ import sys
 import pymysql
 import contextlib
 import configparser
+import sys
+import codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
 cfg = configparser.ConfigParser()
 cfg.read('config.ini')

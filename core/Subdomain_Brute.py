@@ -32,10 +32,11 @@ childconcurrency = int(Set.childconcurrency)
 
 Dicts = os.path.join('Auxiliary','SubDomainDict.list')
 sub_lists = list(set([x.strip() for x in open(Dicts,'r').readlines()]))
+# 二级子域名字典
 
 DDicts = os.path.join('Auxiliary','NextSubDomainDict.list')
 Next_sub_lists = list(set([x.strip() for x in open(DDicts,'r').readlines()]))
-
+# 三级子域名字典
 
 cert_path = os.path.join('Auxiliary','cacert.pem')
 #cert_path = 'cacert.pem'
