@@ -12,7 +12,8 @@ import aiohttp
 from urllib.parse import urlparse
 import multiprocessing
 import random
-
+import requests
+from concurrent.futures import ThreadPoolExecutor
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'}
 
 import django
@@ -177,6 +178,29 @@ class Brute:
             result = await pool.map(self.check_url_alive,urls)
         return [x for x in result if x is not None]
 
+    def Requests(self,url):
+        '''
+        2019-12-16
+        1. 使用requests替代aiohttp
+        '''
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
+        try:
+            r = requests.get(url='http://'+url, headers=headers, timeout=10)
+            if b'Service Unavailable' not in r.content and b'The requested URL was not found on' not in r.content and b'The server encountered an internal error or miscon' not in r.content:
+                if r.status_code in Alive_Status:
+                    u = urlparse(str(r.url))
+                    return u.scheme + '://' + u.netloc
+        except:
+            pass
+        try:
+            r = requests.get(url=url.replace('https://'+url), headers=headers, verify=False, timeout=10)
+            if b'Service Unavailable' not in r.content and b'The requested URL was not found on' not in r.content and b'The server encountered an internal error or miscon' not in r.content:
+                if r.status_code in Alive_Status:
+                    u = urlparse(str(r.url))
+                    return u.scheme + '://' + u.netloc
+        except:
+            return None
 
     def start(self):
         multiprocessing.freeze_support()
@@ -201,14 +225,26 @@ class Brute:
     def substart(self):
         '''2019-12-15
         1. 添加新功能，获取三级子域名，作为独立线程爆破-->添加到爬虫进程中处理
-        '''
+
+        2019-12-16
+        1. 发现异常，multiprocessing->async_apply 与 Asyncio->aiohttp 之间不完美兼容
+            进程异步执行-->保存的执行对象与多进程协程异步执行-->保存的执行对象状态 存在冲突
+        2. 取消下面代码，使用requests执行
+
         multiprocessing.freeze_support()
         loop = asyncio.get_event_loop()
         Nextsubdomain_lists = [x + '.' + self.domain.split('//')[1] for x in Next_sub_lists]
+        print('[+ Brute NextSubdomain] 爆破 : {} 暴力破解下级子域名总任务量 : {}'.format(self.domain,len(Nextsubdomain_lists)))
         alive_urls = loop.run_until_complete(self.main(Nextsubdomain_lists))
         print('[+ Alive NextSubdomain] 存活 : {} 暴力破解获取下级子域存活数量 : {}'.format(self.domain,len(alive_urls)))
         return list(set(alive_urls))
-
+        '''
+        Nextsubdomain_lists = [x + '.' + self.domain.split('//')[1] for x in Next_sub_lists]
+        with ThreadPoolExecutor() as pool:
+            result = pool.map(self.Requests,Nextsubdomain_lists)
+        results = [x for x in result if x!=None]
+        print('[+ Alive NextSubdomain] 存活 : {} 暴力破解获取下级子域存活数量 : {}'.format(self.domain, len(results)))
+        return list(set(results))
 
 if __name__ == '__main__':
     r = Brute('qq.com')

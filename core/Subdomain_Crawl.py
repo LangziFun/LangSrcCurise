@@ -59,16 +59,19 @@ def matchsubdomain(subdomains, html):
     :rtype: set or list
     """
     for subdomain in subdomains:
-        regexp = r'(?:\>|\"|\'|\=|\,)(?:http\:\/\/|https\:\/\/)?' \
-                 r'(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.){0,}' \
-                 + subdomain.replace('.', r'\.')
-        result = re.findall(regexp, html, re.I)
-        deal = map(lambda s: re.sub('"', '', s[1:].lower()), result)
-        for dea in deal:
-            if 'http' not in deal:
-                results.add('http://'+dea)
-            else:
-                results.add(dea)
+        try:
+            regexp = r'(?:\>|\"|\'|\=|\,)(?:http\:\/\/|https\:\/\/)?' \
+                     r'(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.){0,}' \
+                     + subdomain.replace('.', r'\.')
+            result = re.findall(regexp, html, re.I)
+            deal = map(lambda s: re.sub('"', '', s[1:].lower()), result)
+            for dea in deal:
+                if 'http' not in deal:
+                    results.add('http://'+dea)
+                else:
+                    results.add(dea)
+        except:
+            pass
     return list(set(results))
 
 # @from JSFinder
@@ -406,8 +409,7 @@ def Get_Alive_Url(urls):
 def Crawl(url):
     result1 = Crawl_Links(url)
     try:
-        UA = random.choice(headerss)
-        headers = {'User-Agent': UA, 'Connection': 'close'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
         r = requests.get(url=url, headers=headers, verify=False, timeout=timeout)
         encoding = requests.utils.get_encodings_from_content(r.text)[0]
         res = r.content.decode(encoding, 'replace')

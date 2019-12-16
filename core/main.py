@@ -5,7 +5,7 @@ import time
 from core.Subdomain_Baidu import Baidu
 from core.Subdomain_Brute import Brute
 from core.Subdomain_Crawl import Crawl
-from core.Subdomain_Api import Api
+from core.Subdomain_Api import Api,Requests
 from core.Url_Info import Get_Url_Info
 from core.Host_Info import Get_Ip_Info,Get_Alive_Url
 from core.Cor import Cor
@@ -579,8 +579,9 @@ def Run_Crawl(Domains):
                 Br = Brute(url)
                 res = Br.substart()
                 res = list(set(res))
-                with ThreadPoolExecutor(max_workers=pool_count) as pool2:
-                    result = pool2.map(Add_Data_To_Url, list(res))
+                if res !=[]:
+                    with ThreadPoolExecutor(max_workers=pool_count) as pool2:
+                        result = pool2.map(Add_Data_To_Url, list(res))
             except Exception as e:
                 Except_Log(stat=65, url=url + '|下级子域名爆破失败|', error=str(e))
             return
@@ -633,8 +634,9 @@ def Run_Crawl(Domains):
             Br = Brute(url)
             res = Br.substart()
             res = list(set(res))
-            with ThreadPoolExecutor(max_workers=pool_count) as pool2:
-                result = pool2.map(Add_Data_To_Url, list(res))
+            if res !=[]:
+                with ThreadPoolExecutor(max_workers=pool_count) as pool2:
+                    result = pool2.map(Add_Data_To_Url, list(res))
         except Exception as e:
             Except_Log(stat=65, url=url + '|下级子域名爆破失败|', error=str(e))
     except Exception as e:
