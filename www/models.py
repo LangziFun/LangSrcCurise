@@ -3,7 +3,7 @@ from django.db import models
 
 class User(models.Model):
     uid = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=100,unique=True,default='test',verbose_name='用户账号')
+    username = models.CharField(max_length=100,unique=True,default='test',verbose_name='普通用户账号')
     password = models.CharField(max_length=100,default='test',verbose_name='用户密码')
     userkey = models.CharField(max_length=100,default='123456',verbose_name='用户口令')
     last_login_ip = models.CharField(max_length=16,default='127.0.0.1',verbose_name='最后登陆IP')

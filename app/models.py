@@ -33,6 +33,7 @@ class Domains(models.Model):
     BA_name = models.CharField(max_length=50, verbose_name='名称')
     BA_id = models.CharField(max_length=50, verbose_name='编号')
     counts = models.CharField(max_length=8, default=0, verbose_name='捕获数量')
+    curise = models.CharField(max_length=5,choices = (('yes', '是'), ('no', '否')),default='yes',verbose_name='是否监控该域名')
     change_time = models.DateTimeField(auto_now=True,verbose_name='修改时间')
 
     class Meta:

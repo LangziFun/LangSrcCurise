@@ -104,7 +104,7 @@ Set = Setting.objects.all()[0]
 pool_count = int(Set.Pool)
 Alive_Status = eval(Set.Alive_Code)
 
-BA = Domains.objects.all()
+BA = Domains.objects.filter(curise='yes')
 ALL_DOMAINS = [x.get('url') for x in BA.values()]
 '''获取所有监控域名列表'''
 
