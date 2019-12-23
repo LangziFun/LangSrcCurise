@@ -56,10 +56,10 @@ class x_show_data(object):
 xadmin.site.register(Show_Data,x_show_data)
 
 class x_domains(object):
-    list_display = ['uid','url','BA_id','BA_sex','BA_name','counts','change_time']
+    list_display = ['uid','url','BA_id','BA_sex','BA_name','counts','curise','change_time']
     model_icon = 'fa fa-camera-retro'
-    search_fields = ["url",'BA_id','BA_sex','BA_name','counts','change_time']
-    refresh_times = (30, 60)
+    search_fields = ["url",'BA_id','BA_sex','BA_name','counts','curise','change_time']
+    refresh_times = (10, 20)
     # list_bookmarks = [{
     #     'title': "京东数据",  # 书签的名称, 显示在书签菜单中
     #     'query': {'BA_name__startswith': '北京'},  # 过滤参数, 是标准的 queryset 过滤

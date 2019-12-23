@@ -6,6 +6,7 @@ import configparser
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Process
+import random
 
 cfg = configparser.ConfigParser()
 cfg.read('config.ini')
@@ -72,9 +73,16 @@ def start():
         Alive_Status = eval(Set.Alive_Code)
         pax = range(int(Set.Thread))
 
-        BA = Domains.objects.all()
-        Sub_Domains = [x.get('url') for x in BA.values()]
-        print('\n[成功] 数据库配置文件加载成功 请耐心等待数据持续收集整理\n\n')
+        BA = Domains.objects.filter(curise='yes')
+        Sub_Domains = [x.get('url') for x in BA.values()][::random.choice([1,-1])]
+        if Sub_Domains == []:
+            print('\n[异常] 监控域名数据表中未设置是否监控域名 请在后台修改监控状态后重启扫描\n\n')
+            while 1:
+                time.sleep(600)
+                time.sleep(600)
+                time.sleep(600)
+        else:
+            print('\n[成功] 数据库配置文件加载成功 请耐心等待数据持续收集整理\n\n')
 
     except Exception as e:
         print('\n[警告] 数据库配置文件加载失败 请在后台管理系统检查是否正确配置相关数据\n\n')

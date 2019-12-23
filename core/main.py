@@ -104,7 +104,7 @@ Set = Setting.objects.all()[0]
 pool_count = int(Set.Pool)
 Alive_Status = eval(Set.Alive_Code)
 
-BA = Domains.objects.all()
+BA = Domains.objects.filter(curise='yes')
 ALL_DOMAINS = [x.get('url') for x in BA.values()]
 '''获取所有监控域名列表'''
 
@@ -556,9 +556,30 @@ def Run_Crawl(Domains):
     time.sleep(random.randint(10, 20))
     time.sleep(random.randint(10, 20))
     time.sleep(random.randint(10, 20))
-    time.sleep(random.randint(10, 20))
-    time.sleep(random.randint(10, 20))
-    time.sleep(random.randint(10, 20))
+
+    '''
+    2019-12-23
+    新增监控域名是否监控状态，所以此处需要修改逻辑
+    1. 如果你之前扫描过该网址
+    2. 那么网址索引表就有该网址
+    3. 但是如果中期停止监控该域名
+    4. 那么按照上面的获取数据的定式方式，还是获取一样的结果
+    5. 所以需要做一个判断
+    6. 但是后期你又要把这个域名设置为监控状态
+    7. 所以来了个翻转两次的逻辑
+    最终结论：有可能在A网址爬到了B的子域名，但是在B的网址爬不到B的子域名
+    所以多爬几次影响不大，不建议不爬行，所以此处不做修改
+    for subd in ALL_DOMAINS:
+        if subd in url:
+            ins = True
+            target_url.get = '是'
+            # 这里需要提前设置的原因是，防止下一个进程启动重复 使用 同一个数据
+            target_url.save()
+    if ins == False:
+        target_url.get = '空'
+        target_url.save()
+        return
+    '''
     try:
         target_url = URL.objects.filter(get='否')[0]
         url = target_url.url
@@ -566,77 +587,74 @@ def Run_Crawl(Domains):
         target_url.save()
         # 这里需要提前设置的原因是，防止下一个进程启动重复 使用 同一个数据
     except Exception as e:
-        time.sleep(600)
         Except_Log(stat=31, url='|获取URL并设置扫描状态失败|', error='获取预爬行网址失败')
         # 在获取失败（数据库没数据存入），重试一次
+        time.sleep(600)
         ResetCrawl(db=Dbname)
         return
 
     try:
         All_Urls = Crawl(url)
-        if All_Urls == []:
-            try:
-                Br = Brute(url)
-                res = Br.substart()
-                res = list(set(res))
-                if res !=[]:
-                    with ThreadPoolExecutor(max_workers=pool_count) as pool2:
-                        result = pool2.map(Add_Data_To_Url, list(res))
-            except Exception as e:
-                Except_Log(stat=65, url=url + '|下级子域名爆破失败|', error=str(e))
-            return
-        All_Urls = set(All_Urls)
-        Other_Domains = []
-        if list(All_Urls) != [] and All_Urls != None:
-            try:
-                Sub_Domains1 = set([y for x in Domains for y in All_Urls if x in y])
-                if list(Sub_Domains1) != []:
-                    with ThreadPoolExecutor(max_workers=pool_count) as pool1:
-                        result = pool1.map(Add_Data_To_Url, list(Sub_Domains1))
-                Other_Domains = list(All_Urls-Sub_Domains1)
-            except Exception as e:
-                Except_Log(stat=11, url='|获取URL失败|', error=str(e))
-
-            if Other_Domains != [] and Other_Domains != None:
+        if All_Urls != []:
+            All_Urls = set(All_Urls)
+            Other_Domains = []
+            if list(All_Urls) != [] and All_Urls != None:
                 try:
-                    for urle in Other_Domains:
-                        if '.gov.cn' not in urle and  '.edu.cn' not in urle:
-                            try:
-                                try:
-                                    Test_Other_Url = list(Other_Url.objects.filter(url=urle))
-                                except:
-                                    close_old_connections()
-                                    Test_Other_Url = list(Other_Url.objects.filter(url=urle))
-                                if Test_Other_Url == []:
-                                    ip = get_host(urle)
-                                    res = Get_Url_Info(urle).get_info()
-                                    res_url = res.get('url')
-                                    try:
-                                        res_title = pymysql.escape_string(res.get('title'))
-                                    except:
-                                        res_title = 'Error'
-                                    res_power = res.get('power')
-                                    res_server = res.get('server')
-                                    status = res.get('status')
-                                    res_ip = ip
-                                    #if int(status) in Alive_Status:
-                                    try:
-                                        Other_Url.objects.create(url=res_url, title=res_title, power=res_power, server=res_server,status=status,ip=res_ip)
-                                    except Exception as e:
-                                        Except_Log(stat=33, url=url+'|资产爬行错误|', error=str(e))
-                                        close_old_connections()
-                                        Other_Url.objects.create(url=res_url, title='Error', power=res_power, server=res_server,status=status,ip=res_ip)
-                            except Exception as e:
-                                Except_Log(stat=37, url=url + '|资产爬行错误|', error=str(e))
+                    Sub_Domains1 = set([y for x in Domains for y in All_Urls if x in y])
+                    if list(Sub_Domains1) != []:
+                        with ThreadPoolExecutor(max_workers=pool_count) as pool1:
+                            result = pool1.map(Add_Data_To_Url, list(Sub_Domains1))
+                    Other_Domains = list(All_Urls-Sub_Domains1)
                 except Exception as e:
-                    Except_Log(stat=36, url=url + '|资产爬行错误|', error=str(e))
+                    Except_Log(stat=11, url='|获取URL失败|', error=str(e))
+
+                if Other_Domains != [] and Other_Domains != None:
+                    try:
+                        for urle in Other_Domains:
+                            if '.gov.cn' not in urle and  '.edu.cn' not in urle:
+                                try:
+                                    try:
+                                        Test_Other_Url = list(Other_Url.objects.filter(url=urle))
+                                    except:
+                                        close_old_connections()
+                                        Test_Other_Url = list(Other_Url.objects.filter(url=urle))
+                                    if Test_Other_Url == []:
+                                        ip = get_host(urle)
+                                        res = Get_Url_Info(urle).get_info()
+                                        res_url = res.get('url')
+                                        try:
+                                            res_title = pymysql.escape_string(res.get('title'))
+                                        except:
+                                            res_title = 'Error'
+                                        res_power = res.get('power')
+                                        res_server = res.get('server')
+                                        status = res.get('status')
+                                        res_ip = ip
+                                        #if int(status) in Alive_Status:
+                                        try:
+                                            Other_Url.objects.create(url=res_url, title=res_title, power=res_power, server=res_server,status=status,ip=res_ip)
+                                        except Exception as e:
+                                            Except_Log(stat=33, url=url+'|资产爬行错误|', error=str(e))
+                                            close_old_connections()
+                                            Other_Url.objects.create(url=res_url, title='Error', power=res_power, server=res_server,status=status,ip=res_ip)
+                                except Exception as e:
+                                    Except_Log(stat=37, url=url + '|资产爬行错误|', error=str(e))
+                    except Exception as e:
+                        Except_Log(stat=36, url=url + '|资产爬行错误|', error=str(e))
         try:
-            Br = Brute(url)
-            res = Br.substart()
-            res = list(set(res))
-            if res !=[]:
-                with ThreadPoolExecutor(max_workers=pool_count) as pool2:
-                    result = pool2.map(Add_Data_To_Url, list(res))
+            '''
+            2019-12-23
+            虽然上面的爬行网址不做逻辑修改
+            但是此处获取下一级子域名就没必要获取没在监控列表的域名了
+            '''
+            for sub in Domains:
+                if sub in url:
+                    Br = Brute(url)
+                    res = Br.substart()
+                    res = list(set(res))
+                    if res !=[]:
+                        with ThreadPoolExecutor(max_workers=pool_count) as pool2:
+                            result = pool2.map(Add_Data_To_Url, list(res))
         except Exception as e:
             Except_Log(stat=65, url=url + '|下级子域名爆破失败|', error=str(e))
     except Exception as e:
@@ -668,9 +686,10 @@ def Sub_Api(Sub_Domains):
             if res != [] and res != None:
                 with ThreadPoolExecutor(max_workers=pool_count) as pool4:
                     result = pool4.map(Add_Data_To_Url, list(set(res)))
-            time.sleep(5)
+            time.sleep(2)
             # 每次扫完一个域名等待一小会儿
         time.sleep(3600 * 48)
+        # 一天一夜查询一次
 
 def Sub_Baidu(Sub_Domains):
     while 1:
