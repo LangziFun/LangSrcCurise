@@ -10,6 +10,8 @@ requests.packages.urllib3.disable_warnings()
 import re
 import random
 import time
+import re
+from urllib.parse import urlparse
 
 _Headers = [
     "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",
@@ -30,6 +32,67 @@ _Headers = [
     "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.0 Safari/536.3",
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",
     "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24"]
+
+
+'''
+2019-12-28
+新增获取网址标题
+'''
+Alive_Status = range(1000)
+def get_title(r):
+    title = '获取失败'
+    try:
+        title_pattern = b'<title>(.*?)</title>'
+        title = re.search(title_pattern, r, re.S | re.I).group(1)
+        try:
+            title = title.decode().replace('\n', '').strip()
+            return title
+        except:
+            try:
+                title = title.decode('gbk').replace('\n', '').strip()
+                return title
+            except:
+                return title
+    except:
+        return title
+    finally:
+        return title
+def RequestsTitle(url):
+    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'}
+    title = '获取失败'
+    title1 = '获取失败'
+    title2 = '获取失败'
+    content1 = None
+    content2 = None
+    try:
+        r = requests.get(url=url,headers=headers,verify=False,timeout=20)
+        if b'text/html' in r.content or b'<title>' in r.content or b'</html>' in r.content:
+            content1 = r.content
+        if int(r.status_code) in Alive_Status:
+            u = urlparse(str(r.url))
+            title1 = get_title(r.content)
+            url1 = u.scheme + '://' + u.netloc
+    except Exception as e:
+        pass
+    try:
+        r = requests.get(url=url,headers=headers,verify=False,timeout=20)
+        if b'text/html' in r.content or b'<title>' in r.content or b'</html>' in r.content:
+            content2 = r.content
+        if int(r.status_code) in Alive_Status:
+            u = urlparse(str(r.url))
+            title2 = get_title(r.content)
+            url2 = u.scheme + '://' + u.netloc
+    except Exception as e:
+        pass
+    if title1 != '获取失败':
+        return title1
+    if title2 != '获取失败':
+        return title2
+    if content1 != None:
+        return title
+    if content2 != None:
+        return title
+    return title
 
 class Get_Url_Info:
     def __init__(self,url):

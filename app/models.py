@@ -59,7 +59,7 @@ class URL(models.Model):
     change_time = models.DateTimeField(auto_now=True,verbose_name='修改时间')
     class Meta:
         db_table = 'URL'
-        verbose_name = '网址索引'
+        verbose_name = '域名资产'
         verbose_name_plural = verbose_name
 
 class Other_Url(models.Model):
@@ -75,6 +75,18 @@ class Other_Url(models.Model):
         db_table = 'Other_Url'
         verbose_name = '网络资产'
         verbose_name_plural = verbose_name
+
+class BLACKURL(models.Model):
+    uid = models.AutoField(primary_key=True)
+    url = models.CharField(max_length=150,unique=True,verbose_name='排除网址')
+    title = models.CharField(max_length=220, default='网站标题',verbose_name='网站标题')
+    resons = models.CharField(max_length=50,default='触发黑名单',verbose_name='排除原因')
+    change_time = models.DateTimeField(auto_now=True,verbose_name='修改时间')
+    class Meta:
+        db_table = 'BLACKURL'
+        verbose_name = '排除资产'
+        verbose_name_plural = verbose_name
+
 
 class Setting(models.Model):
     name = models.CharField(max_length=60,default='萌萌哒屎壳郎二号方案高级配置',verbose_name='配置方案')

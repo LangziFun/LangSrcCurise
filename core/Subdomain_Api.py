@@ -15,6 +15,7 @@ import time
 from urllib.parse import quote,urlparse
 requests.packages.urllib3.disable_warnings()
 timeout = 15
+from core.Url_Info import RequestsTitle
 from concurrent.futures import ThreadPoolExecutor
 import random
 import django
@@ -25,7 +26,13 @@ sys.path.insert(0,pathname)
 sys.path.insert(0,os.path.abspath(os.path.join(pathname,'..')))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","LangSrcCurise.settings")
 django.setup()
-from app.models import Setting,URL
+from app.models import Setting,URL,BLACKURL
+
+from django.db import connections
+def close_old_connections():
+    '''维持数据库心跳包'''
+    for conn in connections.all():
+        conn.close_if_unusable_or_obsolete()
 
 Set = Setting.objects.all()[0]
 pool_count = int(Set.Pool)
@@ -275,6 +282,15 @@ def Api(domain):
                 mid.add('http://'+u)
             else:
                 print('[+ URL Blacklist] 当前网址触发黑名单 : http://{}'.format(u))
+                try:
+                    burl = ''
+                    for blacurl in black_list:
+                        if blacurl in u:
+                            burl = blacurl
+                    close_old_connections()
+                    BLACKURL.objects.create(url='http://{}'.format(u),title=RequestsTitle('http://{}'.format(u)), resons='触发网址黑名单:{}'.format(burl))
+                except Exception as e:
+                    pass
 
     if mid != {}:
         result = Get_Alive_Url(list(mid))

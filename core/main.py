@@ -6,7 +6,7 @@ from core.Subdomain_Baidu import Baidu
 from core.Subdomain_Brute import Brute
 from core.Subdomain_Crawl import Crawl
 from core.Subdomain_Api import Api,Requests
-from core.Url_Info import Get_Url_Info
+from core.Url_Info import Get_Url_Info,RequestsTitle
 from core.Host_Info import Get_Ip_Info,Get_Alive_Url
 from core.Cor import Cor
 import pymysql
@@ -20,7 +20,7 @@ sys.path.insert(0,pathname)
 sys.path.insert(0,os.path.abspath(os.path.join(pathname,'..')))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","LangSrcCurise.settings")
 django.setup()
-from app.models import Other_Url,IP,URL,Show_Data,Error_Log,Cpu_Min,Domains,Setting,Content
+from app.models import Other_Url,IP,URL,Show_Data,Error_Log,Cpu_Min,Domains,Setting,Content,BLACKURL
 from django.db import connections
 from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor
 from multiprocessing import Pool
@@ -41,6 +41,10 @@ black_con = list(set([x.strip() for x in open(DDicts, 'r', encoding='utf-8').rea
 DDDicts = os.path.join('Auxiliary','Black_Url.list')
 black_url = list(set([x.strip() for x in open(DDDicts, 'r', encoding='utf-8').readlines()]))
 '''网址黑名单'''
+def close_old_connections():
+    '''维持数据库心跳包'''
+    for conn in connections.all():
+        conn.close_if_unusable_or_obsolete()
 
 def Except_Log(stat,url,error):
     '''日志保存函数'''
@@ -51,10 +55,7 @@ def Except_Log(stat,url,error):
         close_old_connections()
         Error_Log.objects.create(url=url, error='错误代码 [{}] {}'.format(stat,str(error)))
 
-def close_old_connections():
-    '''维持数据库心跳包'''
-    for conn in connections.all():
-        conn.close_if_unusable_or_obsolete()
+
 
 '''2019-12-10
     1. 新增一个功能，如果当数据库的所有网址都爬完了，则重启爬虫，设置所有网址为未爬行状态
@@ -152,11 +153,6 @@ def Add_Data_To_Url(url):
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
     close_old_connections()
     print('[+ Insert Url] 入库网址 : {}'.format(url))
     if '.gov.cn' in url or '.edu.cn' in url:
@@ -164,15 +160,35 @@ def Add_Data_To_Url(url):
     urlinblackurl = check_black(url,black_url)
     if urlinblackurl == True:
         print('[+ URL Blacklist] 当前网址触发黑名单 : {}'.format(url))
+        try:
+            burl = ''
+            for blacurl in black_url:
+                if blacurl in url:
+                    burl = blacurl
+            close_old_connections()
+            BLACKURL.objects.create(url=url,title=RequestsTitle(url),resons='触发网址黑名单:{}'.format(burl))
+        except Exception as e:
+            pass
         return
+
+
     try:
         ip = get_host(url)
         if ip == '获取失败':
+            try:
+                BLACKURL.objects.create(url=url,title=RequestsTitle(url), resons='获取网址IP失败')
+            except Exception as e:
+                pass
             return
         if ip in black_ip:
             '''触发IP黑名单机制'''
             print('[+ IP Blacklist] 当前IP触发黑名单 : {} --> {}'.format(ip,url))
+            try:
+                BLACKURL.objects.create(url=url,title=RequestsTitle(url), resons='触发IP黑名单:{}'.format(ip))
+            except Exception as e:
+                pass
             return
+
         try:
             test_url = list(URL.objects.filter(url=url))
         except:
@@ -232,8 +248,17 @@ def Add_Data_To_Url(url):
                                 blackconincon = check_black(Sconten,black_con)
                                 if blackconincon == True:
                                     '''触发网页内容黑名单'''
+                                    burl = ''
+                                    for blacurl in black_con:
+                                        if blacurl in Sconten:
+                                            burl = blacurl
                                     print('[+ Cont Blacklist] 当前网页内容触发黑名单 : {}'.format(url))
-                                    return None
+                                    try:
+                                        close_old_connections()
+                                        BLACKURL.objects.create(url=url,title=RequestsTitle(url), resons='触发网页内容黑名单:{}'.format(burl))
+                                    except Exception as e:
+                                        pass
+                                    return
                             except:
                                 Sconten = '获取失败'
                         Show_contents = pymysql.escape_string(Sconten)
@@ -313,10 +338,6 @@ def Add_Data_To_Url(url):
 
 
 def Change_IP_Info():
-        time.sleep(random.randint(10,20))
-        time.sleep(random.randint(10,20))
-        time.sleep(random.randint(10,20))
-        time.sleep(random.randint(10,20))
         time.sleep(random.randint(10,20))
         time.sleep(random.randint(10,20))
         time.sleep(random.randint(10,20))

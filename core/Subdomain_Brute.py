@@ -15,6 +15,7 @@ import random
 import requests
 from concurrent.futures import ThreadPoolExecutor
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'}
+from core.Url_Info import RequestsTitle
 
 import django
 import os

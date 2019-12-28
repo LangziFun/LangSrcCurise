@@ -5,7 +5,7 @@
 @time: 2019/8/6 9:43
 @file: Subdomain_Baidu.py
 """
-
+from core.Url_Info import RequestsTitle
 import requests
 import re
 import time
@@ -24,7 +24,15 @@ sys.path.insert(0,pathname)
 sys.path.insert(0,os.path.abspath(os.path.join(pathname,'..')))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","LangSrcCurise.settings")
 django.setup()
-from app.models import Setting,URL
+from app.models import Setting,URL,BLACKURL
+
+
+from django.db import connections
+def close_old_connections():
+    '''维持数据库心跳包'''
+    for conn in connections.all():
+        conn.close_if_unusable_or_obsolete()
+
 
 Set = Setting.objects.all()[0]
 pool_count = int(Set.Pool)
@@ -35,6 +43,7 @@ Dicts = os.path.join('Auxiliary','Black_Url.list')
 black_list = list(set([x.strip() for x in open(Dicts, 'r', encoding='utf-8').readlines()]))
 
 servers = ['220.181.112.244','123.125.114.144','180.97.33.107','180.97.33.108','61.135.169.121','14.215.177.38','183.232.231.172','61.135.169.125']
+
 
 
 def check_black(url):
@@ -191,10 +200,20 @@ def Baidu(domain):
                 # 这里读取验证码即可
                     real_url = r.url.rstrip('/')
                     bla = check_black(real_url)
+                    NowUrl = str(urlparse(real_url).scheme + '://' + urlparse(real_url).netloc)
                     if bla == False:
-                        returl_result.add(urlparse(real_url).scheme + '://' + urlparse(real_url).netloc)
+                        returl_result.add(NowUrl)
                     else:
-                        print('[+ URL Blacklist] 当前网址触发黑名单 : {}'.format(urlparse(real_url).scheme + '://' + urlparse(real_url).netloc))
+                        print('[+ URL Blacklist] 当前网址触发黑名单 : {}'.format(NowUrl))
+                        try:
+                            burl = ''
+                            for blacurl in black_list:
+                                if blacurl in NowUrl:
+                                    burl = blacurl
+                            close_old_connections()
+                            BLACKURL.objects.create(url=NowUrl,title=RequestsTitle(NowUrl), resons='触发网址黑名单:{}'.format(burl))
+                        except Exception as e:
+                            pass
         except Exception as e:
             # print(e)
             pass

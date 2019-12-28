@@ -31,6 +31,7 @@ Dicts = os.path.join('Auxiliary','Black_Url.list')
 black_list = list(set([x.strip() for x in open(Dicts, 'r', encoding='utf-8').readlines()]))
 
 BA = Domains.objects.all()
+# 这里获取所有监控子域名，哪怕没有设置监控，因为只是爬行网址，并不会消耗过多资源
 Sub_Domains = [x.get('url') for x in BA.values()]
 
 def check_black(url):

@@ -1,6 +1,6 @@
 # coding:utf-8
 from django.contrib import admin
-from .models import Show_Data,IP,URL,Other_Url,Error_Log,Cpu_Min,Domains,Setting,Content
+from .models import Show_Data,IP,URL,Other_Url,Error_Log,Cpu_Min,Domains,Setting,Content,BLACKURL
 admin.site.register(Show_Data)
 admin.site.register(IP)
 admin.site.register(URL)
@@ -9,6 +9,7 @@ admin.site.register(Error_Log)
 admin.site.register(Cpu_Min)
 admin.site.register(Domains)
 admin.site.register(Content)
+admin.site.register(BLACKURL)
 # Register your models here.
 from xadmin import views
 import xadmin
@@ -110,6 +111,17 @@ class x_other(object):
 
 
 xadmin.site.register(Other_Url,x_other)
+
+class x_blackurl(object):
+    list_display = ['uid','url','title','resons','change_time']
+    model_icon = 'fa fa-linux'
+    search_fields =['url','title','resons','change_time']
+    refresh_times = (30, 60)
+
+
+xadmin.site.register(BLACKURL,x_blackurl)
+
+
 class x_content(object):
     list_display = ['url','content','change_time']
     model_icon = 'fa fa-book'
