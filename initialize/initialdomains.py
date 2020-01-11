@@ -20,9 +20,9 @@ class BeiAn:
         self.title_parrten = 'class="w61-0"><div class="ball">(.*?)</div></td>'  # group(1) 正常
         self.ip_parrten = '>IP：(.*?)</a></div>'  # group(1) 正常
         self.ages = '" target="_blank">(.*?)</a></div></div>'  # group(1)
-        self.whois_id = '备案号：</span><a href=.*?" target="_blank">(.*?)</a></div>'  # 需group(1)
-        self.whois_type = '<span>性质：</span><strong>(.*?)</strong></div>'  # 需group(1)
-        self.whois_name = '<span>名称：</span><strong>(.*?)</strong></div>'  # 需group(1)
+        self.whois_id = '备案号:</span><a href=.*?arget="_blank">(.*?)</a></div>'  # 需group(1)
+        self.whois_type = '<div><span>性质:</span><strong>(.*?)</strong></div>'  # 需group(1)
+        self.whois_name = '<span>名称:</span><strong>(.*?)</strong><a href="javas'  # 需group(1)
         self.whois_time = '<span>审核时间：</span><strong>(.*?)</strong></div>'  # 需group(1)
         self.include_baidu = '<div class="Ma01LiRow w12-1 ">(.*?)</div>'  # group(1)
         self.infos = '<div class="MaLi03Row w180">(.*?)</div>'  # 要findall 0，1，2，3
@@ -30,7 +30,7 @@ class BeiAn:
 
     def get_info_from_pattren(self,pattren, result):
         try:
-            res = re.search(pattren, result).group(1)
+            res = re.search(pattren, result,re.S|re.I).group(1)
             return res
         # return str(res.encode('utf-8'))
         except:
