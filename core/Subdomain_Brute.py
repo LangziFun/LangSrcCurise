@@ -149,7 +149,7 @@ class Brute:
                 else:
                     try:
                         close_old_connections()
-                        BLACKURL.objects.create(url='http://'+subdomain, title=RequestsTitle('http://'+subdomain), resons='泛解析过滤或者网址无法正常访问')
+                        BLACKURL.objects.create(url='http://'+subdomain, ip=str(answers),title=RequestsTitle('http://'+subdomain), resons='泛解析过滤或者网址无法正常访问')
                     except:
                         pass
                     res.add(self.FakeDomain_IP)

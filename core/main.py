@@ -166,7 +166,7 @@ def Add_Data_To_Url(url):
                 if blacurl in url:
                     burl = blacurl
             close_old_connections()
-            BLACKURL.objects.create(url=url,title=RequestsTitle(url),resons='触发网址黑名单:{}'.format(burl))
+            BLACKURL.objects.create(url=url,ip=get_host(url),title=RequestsTitle(url),resons='触发网址黑名单:{}'.format(burl))
         except Exception as e:
             pass
         return
@@ -176,7 +176,7 @@ def Add_Data_To_Url(url):
         ip = get_host(url)
         if ip == '获取失败':
             try:
-                BLACKURL.objects.create(url=url,title=RequestsTitle(url), resons='获取网址IP失败')
+                BLACKURL.objects.create(url=url,ip=get_host(url),title=RequestsTitle(url), resons='获取网址IP失败')
             except Exception as e:
                 pass
             return
@@ -184,7 +184,7 @@ def Add_Data_To_Url(url):
             '''触发IP黑名单机制'''
             print('[+ IP Blacklist] 当前IP触发黑名单 : {} --> {}'.format(ip,url))
             try:
-                BLACKURL.objects.create(url=url,title=RequestsTitle(url), resons='触发IP黑名单:{}'.format(ip))
+                BLACKURL.objects.create(url=url,ip=get_host(url),title=RequestsTitle(url), resons='触发IP黑名单:{}'.format(ip))
             except Exception as e:
                 pass
             return
@@ -255,7 +255,7 @@ def Add_Data_To_Url(url):
                                     print('[+ Cont Blacklist] 当前网页内容触发黑名单 : {}'.format(url))
                                     try:
                                         close_old_connections()
-                                        BLACKURL.objects.create(url=url,title=RequestsTitle(url), resons='触发网页内容黑名单:{}'.format(burl))
+                                        BLACKURL.objects.create(url=url,ip=get_host(url),title=RequestsTitle(url), resons='触发网页内容黑名单:{}'.format(burl))
                                     except Exception as e:
                                         pass
                                     return
@@ -674,10 +674,10 @@ def Run_Crawl(Domains):
                     res = Br.substart()
                     res = list(set(res))
                     if res !=[]:
-                        if len(res)>160:
+                        if len(res)>150:
                             for r in res:
                                 close_old_connections()
-                                BLACKURL.objects.create(url=r, title=RequestsTitle(r),resons='泛解析自动过滤')
+                                BLACKURL.objects.create(url=r,ip=get_host(url), title=RequestsTitle(r),resons='泛解析自动过滤')
                         else:
                             with ThreadPoolExecutor(max_workers=pool_count) as pool2:
                                 result = pool2.map(Add_Data_To_Url, list(res))

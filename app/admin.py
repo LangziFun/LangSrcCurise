@@ -113,9 +113,9 @@ class x_other(object):
 xadmin.site.register(Other_Url,x_other)
 
 class x_blackurl(object):
-    list_display = ['uid','url','title','resons','change_time']
+    list_display = ['uid','url','title','ip','resons','change_time']
     model_icon = 'fa fa-linux'
-    search_fields =['url','title','resons','change_time']
+    search_fields =['url','title','ip','resons','change_time']
     refresh_times = (30, 60)
 
 

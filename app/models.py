@@ -79,6 +79,7 @@ class Other_Url(models.Model):
 class BLACKURL(models.Model):
     uid = models.AutoField(primary_key=True)
     url = models.CharField(max_length=150,unique=True,verbose_name='排除网址')
+    ip = models.CharField(max_length=15,verbose_name='指向IP',default='0.0.0.0')
     title = models.CharField(max_length=220, default='网站标题',verbose_name='网站标题')
     resons = models.CharField(max_length=50,default='触发黑名单',verbose_name='排除原因')
     change_time = models.DateTimeField(auto_now=True,verbose_name='修改时间')
