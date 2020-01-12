@@ -150,6 +150,10 @@ def Add_Data_To_Url(url):
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
     close_old_connections()
+    urlhasdomain = check_black(url, ALL_DOMAINS)
+    if urlhasdomain == False:
+        print('[+ Insert Url] 当前网址不在域名监控域名范围内 : {}'.format(url))
+        return
     print('[+ Insert Url] 入库网址 : {}'.format(url))
     if '.gov.cn' in url or '.edu.cn' in url:
         return
