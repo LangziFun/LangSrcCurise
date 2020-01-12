@@ -25,7 +25,15 @@ sys.path.insert(0,pathname)
 sys.path.insert(0,os.path.abspath(os.path.join(pathname,'..')))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","LangSrcCurise.settings")
 django.setup()
-from app.models import Setting,Domains
+from app.models import Setting,Domains,BLACKURL
+from django.db import connections
+from core.Url_Info import RequestsTitle
+
+
+def close_old_connections():
+    '''维持数据库心跳包'''
+    for conn in connections.all():
+        conn.close_if_unusable_or_obsolete()
 
 Set = Setting.objects.all()[0]
 processes = int(Set.processes)
@@ -139,6 +147,11 @@ class Brute:
                     # 这里则确认不存在泛解析,可以，但是没必要
                     res.add(subdomain)
                 else:
+                    try:
+                        close_old_connections()
+                        BLACKURL.objects.create(url='http://'+subdomain, title=RequestsTitle('http://'+subdomain), resons='当前网址为泛解析')
+                    except:
+                        pass
                     res.add(self.FakeDomain_IP)
         return list(res)
 
