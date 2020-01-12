@@ -149,10 +149,6 @@ def Add_Data_To_Url(url):
     '''
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
-    time.sleep(random.randint(5,20))
     close_old_connections()
     print('[+ Insert Url] 入库网址 : {}'.format(url))
     if '.gov.cn' in url or '.edu.cn' in url:

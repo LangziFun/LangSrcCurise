@@ -49,7 +49,11 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'startscan':
         from core.Run_Tasks import start
         start()
-
+    elif sys.argv[1] == 'inserturl':
+        from initialize.initialdomains import InsertUrls
+        filetxt = sys.argv[2]
+        if os.path.exists(filetxt):
+            InsertUrls(filetxt)
     else:
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LangSrcCurise.settings')
         try:

@@ -9,7 +9,8 @@ sys.path.insert(0,os.path.abspath(os.path.join(pathname,'..')))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","LangSrcCurise.settings")
 django.setup()
 from app.models import Domains
-
+from core.main import Add_Data_To_Url
+from concurrent.futures import ThreadPoolExecutor
 
 import requests,re
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'}
@@ -97,5 +98,13 @@ def initialdomains():
             BA.save()
         except Exception as e:
             print(e)
+def InsertUrls(filetxt):
+    try:
+        urls = [x.strip()  if   x.startswith('http') else 'http://'+x.strip()  for x in open(filetxt,'r',encoding='utf-8').readlines() ]
+        with ThreadPoolExecutor() as pool:
+            pool.map(Add_Data_To_Url,urls)
+    except Exception as e:
+        print('读取导入域名文本失败:{}'.find(str(e)))
+
 if __name__ == '__main__':
     pass

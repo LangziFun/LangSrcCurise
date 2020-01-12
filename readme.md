@@ -1,6 +1,6 @@
 # 更新
 
-- 2020-01-12:11点04分 更新下级子域名泛解析检测，更新网页备案信息爬虫规则。原用户需要执行两条命令:1. python3 manage.py makemigrations 2. python3 manage.py migrate，然后在后台进行相关设置后重启扫描。
+- 2020-01-23:59点04分 更新下级子域名泛解析检测，更新网页备案信息爬虫规则，新增批量导入子域名网址文本功能，执行命令:python3 manage.py inserturl 子域名文件,比如-->python3 manage.py inserturl L:\CODE\src子域名20000条.txt。原用户需要执行两条命令:1. python3 manage.py makemigrations 2. python3 manage.py migrate，然后在后台进行相关设置后重启扫描。
 - 2019-12-28:16点04分 触发黑名单网址将会保存到数据库。原用户需要执行两条命令:1. python3 manage.py makemigrations 2. python3 manage.py migrate，然后在后台进行相关设置后重启扫描。
 - 2019-12-22:10点21分 后台管理-->监控域名表-->设置子域名是否监控状态。原用户需要执行两条命令:1. python3 manage.py makemigrations 2. python3 manage.py migrate，然后在后台进行相关设置后重启扫描。
 - 2019-12-15:14点55分 优化下一级子域名爆破扫描流程
@@ -258,6 +258,20 @@ Windows下推荐mysql.ini设置如下：
 第111行和112行
 
 **还能扫描C段信息，取消部分注释就行，可以但没必要**
+
+## 导入批量子域名网址文本
+
+在 LangSrcCurise 文件夹下依次执行如下命令：
+
+	python3 manage.py inserturl 你的网址文本.txt
+
+比如：
+
+	python3 manage.py inserturl L:\CODE\src子域名20000条.txt
+
+
+会将文本中的网址进行自动去重，过滤，获取数据后保存到资产表数据中。
+
 
 ## 后续
 
