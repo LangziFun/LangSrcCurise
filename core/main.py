@@ -674,8 +674,13 @@ def Run_Crawl(Domains):
                     res = Br.substart()
                     res = list(set(res))
                     if res !=[]:
-                        with ThreadPoolExecutor(max_workers=pool_count) as pool2:
-                            result = pool2.map(Add_Data_To_Url, list(res))
+                        if len(res)>160:
+                            for r in res:
+                                close_old_connections()
+                                BLACKURL.objects.create(url=r, title=RequestsTitle(r),resons='当前网址为泛解析')
+                        else:
+                            with ThreadPoolExecutor(max_workers=pool_count) as pool2:
+                                result = pool2.map(Add_Data_To_Url, list(res))
         except Exception as e:
             Except_Log(stat=65, url=url + '|下级子域名爆破失败|', error=str(e))
     except Exception as e:
