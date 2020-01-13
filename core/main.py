@@ -153,6 +153,8 @@ def Add_Data_To_Url(url):
     urlhasdomain = check_black(url, ALL_DOMAINS)
     if urlhasdomain == False:
         print('[+ Insert Url] 当前网址不在域名监控域名范围内 : {}'.format(url))
+        close_old_connections()
+        BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='当前网址不在域名监控域名范围内')
         return
     print('[+ Insert Url] 入库网址 : {}'.format(url))
     if '.gov.cn' in url or '.edu.cn' in url:
