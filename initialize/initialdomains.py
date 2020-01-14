@@ -11,7 +11,9 @@ django.setup()
 from app.models import Domains
 from core.main import Add_Data_To_Url
 from concurrent.futures import ThreadPoolExecutor
-
+from core.Url_Info import DomainsInfos
+BA = Domains.objects.filter(curise='yes')
+ALL_DOMAINS = [x.get('url') for x in BA.values()]
 import requests,re
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'}
 
@@ -99,6 +101,9 @@ def initialdomains():
         except Exception as e:
             print(e)
 def InsertUrls(filetxt):
+    print('\n[加载] 开始获取泛解析对比数据 请耐心等待 获取目标总数为 : {}\n\n'.format(len(ALL_DOMAINS)))
+    DomainsInfos(ALL_DOMAINS)
+    print('[成功] 泛解析对比数据获取成功 请耐心等待数据持续收集整理\n\n')
     try:
         urls = [x.strip()  if   x.startswith('http') else 'http://'+x.strip()  for x in open(filetxt,'r',encoding='utf-8').readlines() ]
         with ThreadPoolExecutor() as pool:

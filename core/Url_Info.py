@@ -1,10 +1,5 @@
-# -*- encoding: utf-8 -*- 
-"""
-@author: LangziFun
-@Blog: www.langzi.fun
-@time: 2019/8/5 21:46
-@file: 获取网址信息.py
-"""
+#coding:utf-8
+import requests,os,re,time
 import requests
 requests.packages.urllib3.disable_warnings()
 import re
@@ -12,7 +7,9 @@ import random
 import time
 import re
 from urllib.parse import urlparse
-
+import socket
+from concurrent.futures import ThreadPoolExecutor
+import difflib
 _Headers = [
     "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",
     "Mozilla/5.0 (X11; CrOS i686 2268.111.0) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11",
@@ -154,6 +151,21 @@ class Get_Url_Info:
         server = [server if server is not None else self.power][0]
         return (power,server)
 
+    def get_host(self):
+        url = self.url.split('//')[1]
+        if ':' in url:
+            url = url.split(':')[0]
+        try:
+            s = socket.gethostbyname(url)
+            return str(s)
+        except Exception as e:
+            time.sleep(2)
+            try:
+                s = socket.gethostbyname(url)
+                return str(s)
+            except Exception as e:
+                return '获取失败'
+
     def get_info(self):
         req = self.Requests()
         if req[0] == 'Error':
@@ -178,24 +190,112 @@ class Get_Url_Info:
             'power':power,
             'server':server,
             'content':content,
-            'status':status
+            'status':status,
+            'ip':str(self.get_host())
         }
         #print(self.result)
         return self.result
+def Return_Content_Difflib(original, compare):
+    '''
+    对比传入字符串相似度
+    :param original: 要判断的字符串1
+    :param compare: 要判断的字符串1
+    :return: 返回结果是相似度判断结果
+        如果相似度非常大则返回True
+        否则返回False
+    '''
+    res = int(str(difflib.SequenceMatcher(None,original, compare).quick_ratio()*10000).split('.')[0])
+    if res>8500:
+        return True
+    else:
+        return False
+    # return 4 integer like 1293 or 9218
+
+def GetDomainsInfos(domain):
+    '''
+    2020-01-14
+    该函数用来过滤泛解析
+    原理如下：
+        - 访问一个不存在的网址，获取【标题，ip，网页内容】
+        - 首先第一步对比 标题 是否一样
+
+        - 如果标题不一样则判定为 非泛解析
+                保存到域名资产+网络资产
+        - 如果标题一样
+            - 则进一步判断ip和网页内容
+            - 如果网页内容相似度非常高
+            - 认定为泛解析，保存到 排除资产数据表
+    '''
+    ORICOM = {domain:{'title': 'None', 'ip': 'None', 'content': 'None'}}
+    DD = Get_Url_Info('http://asyyyyyyyyyyyyyy.{}'.format(domain)).get_info()
+    ORICOM[domain]['title'],ORICOM[domain]['ip'],ORICOM[domain]['content'], = DD['title'],DD['ip'],DD['content']
+    return ORICOM
+
+def DomainsInfos(domains):
+    # 接受数据为一个列表的子域名-->['qq.com','yy.com','iqiyi.com']
+    '''
+    接受的参数如下
+    ['qq.com','yy.com','iqiyi.com']
+    返回的数据格式如下
+    {'qq.com': {'title': '获取失败', 'ip': '220.250.64.225', 'content': 'Error'}, 'yy.com': {'title': '403 Forbidden', 'ip': '125.39.99.224', 'content': '<html>\r\n<head><title>403 Forbidden</title></head>\r\n<body bgcolor="white">\r\n<center><h1>403 Forbidden</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n<!-- a padding to disable MSIE and Chrome friendly error page -->\r\n'}, 'iqiyi.com': {'title': '获取失败', 'ip': '220.250.64.225', 'content': 'Error'}}
+    '''
+    try:
+        if os.path.exists('DomainsInfos.txt'):
+            with open('DomainsInfos.txt', 'r', encoding='utf-8')as a:
+                DOMAINSINFOS = eval(a.read())
+            if len(list(DOMAINSINFOS.keys())) != len(domains):
+                os.remove('DomainsInfos.txt')
+                with ThreadPoolExecutor() as pool:
+                    res = pool.map(GetDomainsInfos, domains)
+                r = {}
+                for d in res:
+                    r.update(d)
+                with open('DomainsInfos.txt', 'a+', encoding='utf-8')as a:
+                    a.write(str(r))
+                return r
+            else:
+                return DOMAINSINFOS
+        else:
+            with ThreadPoolExecutor() as pool:
+                res = pool.map(GetDomainsInfos, domains)
+            r = {}
+            for d in res:
+                r.update(d)
+            with open('DomainsInfos.txt', 'a+', encoding='utf-8')as a:
+                a.write(str(r))
+            return r
+    except Exception as e:
+        if os.path.exists('DomainsInfos.txt'):
+            os.remove('DomainsInfos.txt')
+        with ThreadPoolExecutor() as pool:
+            res = pool.map(GetDomainsInfos, domains)
+        r = {}
+        for d in res:
+            r.update(d)
+        with open('DomainsInfos.txt', 'a+', encoding='utf-8')as a:
+            a.write(str(r))
+        return r
+
 
 if __name__ == '__main__':
     #print(Get_Url_Info('https://dxiyi.taobao.com/').Requests()[0].decode())
-    a = Get_Url_Info('https://170.taobao.com')
-    print(a.get_info()['content'])
-    # '''
-    # 传入数据为 网址https://dxiyi.taobao.com/
-    # 返回数据为
-    # {
-    # url 网址
-    # title 标题
-    # power WEB容器
-    # server 服务器
-    # content 网页内容
-    # status 状态码
-    # }
-    # '''
+    # 如下是获取泛解析数据信息
+    #Domains = ['qq.com','yy.com','iqiyi.com']
+    #print(DomainsInfos(Domains))
+
+    # ORICOM = eval(str(dict.fromkeys(Domains,{'title':'None','ip':'None','content':'None'})))
+    # print(ORICOM)
+    # for dom in Domains:
+    #     DD = Get_Url_Info('http://asyyyyyyyyyyyyyy.{}'.format(dom)).get_info()
+    #     print(DD)
+    #     ORICOM[dom]['title'],ORICOM[dom]['ip'],ORICOM[dom]['content'], = DD['title'],DD['ip'],DD['content']
+    # print(ORICOM)
+    #
+
+    a = Get_Url_Info('http://www.a.yy.com')
+    print(a.get_info())
+    #
+    b = Get_Url_Info('http://ssssssssssssss.yy.com')
+    print(b.get_info())
+    # print('------------------------')
+    print(Return_Content_Difflib(a.get_info()['content'],b.get_info()['content']))

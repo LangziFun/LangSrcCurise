@@ -6,7 +6,7 @@ from core.Subdomain_Baidu import Baidu
 from core.Subdomain_Brute import Brute
 from core.Subdomain_Crawl import Crawl
 from core.Subdomain_Api import Api,Requests
-from core.Url_Info import Get_Url_Info,RequestsTitle
+from core.Url_Info import Get_Url_Info,RequestsTitle,DomainsInfos,Return_Content_Difflib
 from core.Host_Info import Get_Ip_Info,Get_Alive_Url
 from core.Cor import Cor
 import pymysql
@@ -27,7 +27,6 @@ from multiprocessing import Pool
 import threading
 import multiprocessing
 import contextlib
-
 
 
 Gloval_Check = {'domain':'qq.com','counts':0}
@@ -107,9 +106,14 @@ Alive_Status = eval(Set.Alive_Code)
 
 BA = Domains.objects.filter(curise='yes')
 ALL_DOMAINS = [x.get('url') for x in BA.values()]
-'''获取所有监控域名列表'''
-
-
+'''
+2020-01-14
+1. 获取所有监控域名列表
+2. 获取域名泛解析的对比数据
+3. 但是呢，启动方式是多进程，所以如果在这里启动获取对比数据，则会重复启动多次浪费资源
+4. 选择将数据保存在本地文本然后序列化
+'''
+DOMAINSINFOS = DomainsInfos(ALL_DOMAINS)
 
 def Run_Cpu_Min():
     while 1:
@@ -146,6 +150,8 @@ def Add_Data_To_Url(url):
     2019-12-10
         1. 该函数作用为传入网址进行IP黑名单过滤
         2. 该函数作用为传入网址进行【网络资产数据入库，网址索引数据入库，主机资产数据入库，监控域名数量入库处理】
+    2020-01-14
+        1. 新增泛解析过滤规则
     '''
     time.sleep(random.randint(5,20))
     time.sleep(random.randint(5,20))
@@ -153,9 +159,12 @@ def Add_Data_To_Url(url):
     urlhasdomain = check_black(url, ALL_DOMAINS)
     if urlhasdomain == False:
         print('[+ Insert Url] 当前网址不在域名监控域名范围内 : {}'.format(url))
-        close_old_connections()
-        BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='当前网址不在域名监控域名范围内')
-        return
+        try:
+            close_old_connections()
+            BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='当前网址不在域名监控域名范围内')
+            return
+        except:
+            pass
     print('[+ Insert Url] 入库网址 : {}'.format(url))
     if '.gov.cn' in url or '.edu.cn' in url:
         return
@@ -203,7 +212,34 @@ def Add_Data_To_Url(url):
         if test_url != []:
             '''网址索引表如果已经有该网址，则直接退出'''
             return
-
+        '''
+        2020-01-14
+        1. 这里开始对比泛解析数据，判断是否为泛解析网址
+        2. 分别获取泛解析对比的 标题，ip，网页内容
+        3. 然后先对比标题，标题一致，说明不是泛解析哦~
+        4. 其次对比网页内容，如果网页内容相似度过大，则说明泛解析哦~
+        5. 有人问，为什么不直接对比ip不就行了吗？其实不是的，比如xxadasda.yy.com--->aedqwawrqw668.sdada.yy.com很明显都是泛解析，但是解析的ip都是不一样的
+        '''
+        infjx = [x for x in ALL_DOMAINS if x in url]
+        if infjx == []:
+            return
+        else:
+            infjx = infjx[0]
+        inftitle,infip,infcontent = DOMAINSINFOS[infjx]['title'],DOMAINSINFOS[infjx]['ip'],DOMAINSINFOS[infjx]['content']
+        DD = Get_Url_Info(url).get_info()
+        comtitle,comip,comcontent = DD['title'],DD['ip'],DD['content']
+        if inftitle != comtitle:
+            # 如果标题不一样，显而易见不是泛解析~
+            pass
+        else:
+            if Return_Content_Difflib(infcontent,comcontent) == True:
+                try:
+                    print('[+ URL Universal] 泛解析网址自动过滤 : {}'.format(url))
+                    close_old_connections()
+                    BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='泛解析自动过滤')
+                    return
+                except:
+                    pass
         try:
             Test_Other_Url = Other_Url.objects.filter(url=url)
             '''判断网络资产表是否有这个数据，如果没有的话，就添加进去'''
@@ -334,7 +370,6 @@ def Add_Data_To_Url(url):
 
     except Exception as e:
         Except_Log(stat=30, url=url + '|维护传入网址失败|', error=str(e))
-        Add_Data_To_Url(url)
 
 
 
@@ -678,8 +713,12 @@ def Run_Crawl(Domains):
                     if res !=[]:
                         if len(res)>150:
                             for r in res:
-                                close_old_connections()
-                                BLACKURL.objects.create(url=r,ip=get_host(url), title=RequestsTitle(r),resons='泛解析自动过滤')
+                                print('[+ URL Universal] 泛解析网址自动过滤 : {}'.format(url))
+                                try:
+                                    close_old_connections()
+                                    BLACKURL.objects.create(url=r,ip=get_host(url), title=RequestsTitle(r),resons='泛解析自动过滤')
+                                except:
+                                    pass
                         else:
                             with ThreadPoolExecutor(max_workers=pool_count) as pool2:
                                 result = pool2.map(Add_Data_To_Url, list(res))

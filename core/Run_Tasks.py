@@ -1,5 +1,4 @@
 ﻿# coding:utf-8
-from .main import Sub_Crawl,Sub_Baidu,Sub_Brute,Run_Cpu_Min,Sub_ChangeIp,Sub_ChangeInf,Sub_Api,Heartbeat
 import pymysql
 import contextlib
 import configparser
@@ -47,59 +46,55 @@ import sys,os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,os.path.join(BASE_DIR,'ExtrApps'))
 
+print('''
+
+         _                           _
+        | |                         (_)
+        | |     __ _ _ __   __ _ _____
+        | |    / _` | '_ \ / _` |_  / |
+        | |___| (_| | | | | (_| |/ /| |
+        |______\__,_|_| |_|\__, /___|_|
+                            __/ |      
+                           |___/       
+
+''')
+print('Main Console Start Running....')
+try:
+    print('\n[自检] 开始自检数据库相关配置是否正确')
+    with co_mysql(db='mysql') as cursor:
+        row_count = cursor.execute("show databases;")
+        a = cursor.fetchall()
+
+    Set = Setting.objects.all()[0]
+    pool_count = int(Set.Pool)
+    Alive_Status = eval(Set.Alive_Code)
+    pax = range(int(Set.Thread))
+
+    BA = Domains.objects.filter(curise='yes')
+    Sub_Domains = [x.get('url') for x in BA.values()][::random.choice([1, -1])]
+    if Sub_Domains == []:
+        print('\n[异常] 监控域名数据表中未设置是否监控域名 请在后台修改监控状态后重启扫描\n\n')
+        while 1:
+            time.sleep(600)
+            time.sleep(600)
+            time.sleep(600)
+    else:
+        print('\n[成功] 数据库配置文件加载成功\n')
+
+except Exception as e:
+    print('\n[警告] 数据库配置文件加载失败 请在后台管理系统检查是否正确配置相关数据\n\n')
+    time.sleep(60)
+    time.sleep(60)
+    time.sleep(60)
+
+from .Url_Info import DomainsInfos
+
+print('[加载] 开始获取泛解析对比数据 请耐心等待 获取目标总数为 : {}\n'.format(len(Sub_Domains)))
+DomainsInfos(Sub_Domains)
+print('[成功] 泛解析对比数据获取成功 请耐心等待数据持续收集整理\n\n')
+from .main import Sub_Crawl,Sub_Baidu,Sub_Brute,Run_Cpu_Min,Sub_ChangeIp,Sub_ChangeInf,Sub_Api,Heartbeat
 
 def start():
-    print('''
-    
-             _                           _
-            | |                         (_)
-            | |     __ _ _ __   __ _ _____
-            | |    / _` | '_ \ / _` |_  / |
-            | |___| (_| | | | | (_| |/ /| |
-            |______\__,_|_| |_|\__, /___|_|
-                                __/ |      
-                               |___/       
-    
-    ''')
-    print('Main Console Start Running....')
-    try:
-        print('\n开始自检数据库配置文件数据')
-        with co_mysql(db='mysql') as cursor:
-            row_count = cursor.execute("show databases;")
-            a = cursor.fetchall()
-
-        Set = Setting.objects.all()[0]
-        pool_count = int(Set.Pool)
-        Alive_Status = eval(Set.Alive_Code)
-        pax = range(int(Set.Thread))
-
-        BA = Domains.objects.filter(curise='yes')
-        Sub_Domains = [x.get('url') for x in BA.values()][::random.choice([1,-1])]
-        if Sub_Domains == []:
-            print('\n[异常] 监控域名数据表中未设置是否监控域名 请在后台修改监控状态后重启扫描\n\n')
-            while 1:
-                time.sleep(600)
-                time.sleep(600)
-                time.sleep(600)
-        else:
-            print('\n[成功] 数据库配置文件加载成功 请耐心等待数据持续收集整理\n\n')
-
-    except Exception as e:
-        print('\n[警告] 数据库配置文件加载失败 请在后台管理系统检查是否正确配置相关数据\n\n')
-        time.sleep(60)
-        time.sleep(60)
-        time.sleep(60)
-
-    # t2 = threading.Thread(target=Sub_Baidu,args=(Sub_Domains,))
-    # t3 = threading.Thread(target=Sub_Crawl,args=(Sub_Domains,))
-    # t4 = threading.Thread(target=Run_Cpu_Min)
-    # t2.start()
-    # t3.start()
-    # t4.start()
-    # while 1:
-    #     Sub_Brute(Sub_Domains)
-    #     time.sleep(3600*24)
-
     p1 = Process(target=Sub_Api,args=(Sub_Domains,))
     p2 = Process(target=Sub_Baidu,args=(Sub_Domains,))
     p3 = Process(target=Sub_Crawl,args=(pax,Sub_Domains,))
