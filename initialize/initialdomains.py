@@ -9,7 +9,7 @@ sys.path.insert(0,os.path.abspath(os.path.join(pathname,'..')))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","LangSrcCurise.settings")
 django.setup()
 from app.models import Domains
-from core.main import Add_Data_To_Url
+from core.main import Add_Data_To_Url,close_old_connections
 from concurrent.futures import ThreadPoolExecutor
 from core.Url_Info import DomainsInfos
 BA = Domains.objects.filter(curise='yes')
@@ -92,6 +92,7 @@ def initialdomains():
             bsex = str(res.get('备案性质'))
             bname = str(res.get('备案名称'))
             print(bid,bname,bsex)
+            close_old_connections()
             BA = Domains()
             BA.url = task.lower()
             BA.BA_sex = bsex
@@ -100,6 +101,20 @@ def initialdomains():
             BA.save()
         except Exception as e:
             print(e)
+            close_old_connections()
+            print('\n初始化子域名 : {}'.format(task))
+            res = BeiAn(task).scan_seo()
+            bid = str(res.get('备案编号'))
+            bsex = str(res.get('备案性质'))
+            bname = str(res.get('备案名称'))
+            print(bid,bname,bsex)
+            close_old_connections()
+            BA = Domains()
+            BA.url = task.lower()
+            BA.BA_sex = bsex
+            BA.BA_name = bname
+            BA.BA_id = bid
+            BA.save()
 def InsertUrls(filetxt):
     print('\n[加载] 开始获取泛解析对比数据 请耐心等待 获取目标总数为 : {}\n\n'.format(len(ALL_DOMAINS)))
     DomainsInfos(ALL_DOMAINS)

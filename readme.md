@@ -144,17 +144,6 @@ Windows下推荐mysql.ini设置如下：
 
 若出现django.session.table相关错误，修改settings.py中SECRET_KEY值为随机字符串
 
-## 初始化监控域名
-
-编辑监控域名
-
-	initialize/domains.list
-
-执行命令：在 主目录 LangSrcCurise 文件夹下依次执行如下命令：
-
-1. python3 manage.py initial
-
-完成将监控域名初始化到数据库
 
 **一些商城，旅游，同城等网站会使用大量的泛解析，所以需要自己适配黑名单过滤名单**
 
@@ -236,6 +225,19 @@ Windows下推荐mysql.ini设置如下：
 
 因为数据任务都是同时在跑，所以比较吃资源，建议线程等数量都设置在4或者以下，如果有点闲钱，可以上高配置开8进程。
 
+
+## 初始化监控域名
+
+编辑监控域名
+
+	initialize/domains.list
+
+执行命令：在 主目录 LangSrcCurise 文件夹下依次执行如下命令：
+
+1. python3 manage.py initial
+
+完成将监控域名初始化到数据库
+
 ## 开启扫描
 
 在 LangSrcCurise 文件夹下依次执行如下命令：
@@ -296,7 +298,7 @@ Windows下推荐mysql.ini设置如下：
 
 访问地址：http://ip:8888/lsrc  后台管理
 
-**建议是每间隔72小时重启一次扫描端。**
+**建议是每间隔720小时重启一次扫描端。**
 
 如果要后续添加监控域名。有两种方法：
 
