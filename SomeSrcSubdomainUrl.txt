@@ -109,8 +109,6 @@ http://1.url.cn
 http://1.weibo.com
 http://10.push2his.eastmoney.com
 http://100.163.com
-http://101.70.152.34
-http://101.71.75.44
 http://101yinyuejie.iqiyi.com
 http://107cine.com
 http://10jia.letv.com

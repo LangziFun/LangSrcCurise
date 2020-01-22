@@ -89,7 +89,7 @@ def MakeInfoResult():
     body = '''
         <h1>{}LangSrcCurise资产监控报告</h1>
         <hr>
-        <h2>当日新增 {} 个子域名,截至到目前共捕获有效子域名 {} 个</h2>
+        <h2>当日新捕获到 {} 个子域名,截至到目前共捕获有效子域名 {} 个</h2>
                 <hr>
         <table border='1'>
                 <tr>
