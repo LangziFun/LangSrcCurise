@@ -216,7 +216,7 @@ def Add_Data_To_Url(url):
         2020-01-14
         1. 这里开始对比泛解析数据，判断是否为泛解析网址
         2. 分别获取泛解析对比的 标题，ip，网页内容
-        3. 然后先对比标题，标题一致，说明不是泛解析哦~
+        3. 然后先对比标题，标题一致，说明不是泛解析哦~不过携程还是哪个大厂名字忘了，访问频率过快的话，网页标题会变成 填写验证码xxxx
         4. 其次对比网页内容，如果网页内容相似度过大，则说明泛解析哦~
         5. 有人问，为什么不直接对比ip不就行了吗？其实不是的，比如xxadasda.yy.com--->aedqwawrqw668.sdada.yy.com很明显都是泛解析，但是解析的ip都是不一样的
         '''
@@ -229,7 +229,7 @@ def Add_Data_To_Url(url):
         DD = Get_Url_Info(url).get_info()
         comtitle,comip,comcontent = DD['title'],DD['ip'],DD['content']
         if inftitle != comtitle:
-            # 如果标题不一样，显而易见不是泛解析~
+            # 如果标题不一样，显而易见不是泛解析~,大概是80%的准确率
             pass
         else:
             if Return_Content_Difflib(infcontent,comcontent) == True:

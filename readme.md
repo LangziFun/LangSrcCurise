@@ -1,5 +1,6 @@
 # 更新
 
+- 2020-01-22:21点31分 新增每日邮箱提醒功能，具体添加方法在下文。需要安装schedule库。
 - 2020-01-14:21点30分 更新新增基于网页内容相似度，网页标题自动过滤泛解析网站功能。
 - 2020-01-13:23点09分 更新下级子域名泛解析检测，更新网页备案信息爬虫规则，新增批量导入子域名网址文本功能，执行命令:python3 manage.py inserturl 子域名文件,比如-->python3 manage.py inserturl L:\CODE\src子域名20000条.txt。原用户需要执行两条命令:1. python3 manage.py makemigrations 2. python3 manage.py migrate，然后在后台进行相关设置后重启扫描。
 - 2019-12-28:16点04分 触发黑名单网址将会保存到数据库。原用户需要执行两条命令:1. python3 manage.py makemigrations 2. python3 manage.py migrate，然后在后台进行相关设置后重启扫描。
@@ -29,9 +30,8 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 
 在1H2G1M的腾讯云Windows主机下，开启2个线程，2个进程，内存直接吃干净，还是没有开扫端口的情况下- -，最低配置不过如此~
 
-不过这种情况会在Linux下得到友善的优化，但是部署上Windows又比Linux轻松一百倍啊一百倍
+不过这种情况会在Linux下得到友善的优化，但是部署上Windows又比Linux轻松
 
-所以建议配置高点的主机~
 
 # 监控流程
 
@@ -118,22 +118,43 @@ Windows下推荐mysql.ini设置如下：
 	
 
 
-## 配置数据库信息
+## 配置数据库文件与邮箱信息
 
 在主目录下的 config.ini 文件中修改相关mysql登陆信息
 
 并且到securitytrails注册账号填写自己的API
 
+下方为接受每日报表邮箱信息，每天下午20点30分自动发送到邮箱，如果需要修改发送时间，修改代码
+
+    core/Send_Report.py 
+    
+修改最下方时间点后，重启扫描端即可
+
 	[Server]
-	host = 127.0.0.1 # mysql登陆的ip，linux下设置为localhost，也可以填写服务器远程IP
-	port = 3306		# mysql 端口
+	host = 127.0.0.1 
+	# mysql登陆的ip，linux下设置为localhost，也可以填写服务器远程IP
+	port = 3306		
+	# mysql 端口
 	username = root
+	# mysql账号
 	password = root
-	dbname = LangSrcCurise # 你要是用的数据库名字，数据库自动创建
+	dbname = LangSrcCurise 
+	# 你要是用的数据库名字，数据库自动创建
 	[API]
 	securitytrails = PWOSUIBIANXIEDE886X
 	# https://securitytrails.com 注册，免费账户一个月可以查询50次
-
+    [Email]
+    host = smtp.163.com
+    # 邮箱使用服务器，一般用的163邮箱或者qq邮箱，具体方法自行百度
+    port = 465
+    # 邮箱服务器端口
+    username = LangSrcCurise@163.com
+    # 邮箱账号
+    password = test12345
+    # 邮箱的密码，163或qq邮箱需要开启pop3服务后，得到授权码，这里填写授权码
+    receivers = 9966771@qq.com,9966772@qq.com,9966773@qq.com,9966774@qq.com
+    # 这里填写接收报告的邮箱地址，多个邮箱使用,分隔。单个邮箱填写单个邮箱地址即可。
+    
 ## 初始化数据库
 
 在主目录 LangSrcCurise 文件夹下依次执行如下命令：

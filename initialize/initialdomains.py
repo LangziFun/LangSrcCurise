@@ -120,7 +120,7 @@ def InsertUrls(filetxt):
     DomainsInfos(ALL_DOMAINS)
     print('[成功] 泛解析对比数据获取成功 请耐心等待数据持续收集整理\n\n')
     try:
-        urls = [x.strip()  if   x.startswith('http') else 'http://'+x.strip()  for x in open(filetxt,'r',encoding='utf-8').readlines() ]
+        urls = set([x.strip()  if   x.startswith('http') else 'http://'+x.strip()  for x in open(filetxt,'r',encoding='utf-8').readlines() ])
         with ThreadPoolExecutor() as pool:
             pool.map(Add_Data_To_Url,urls)
     except Exception as e:

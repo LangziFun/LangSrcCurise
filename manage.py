@@ -42,6 +42,10 @@ with co_mysql(db='mysql') as cursor:
 if __name__ == '__main__':
     import multiprocessing
     multiprocessing.freeze_support()
+    if os.path.exists('report'):
+        pass
+    else:
+        os.mkdir('report')
     if sys.argv[1] == 'initial':
         from initialize.initialdomains import initialdomains
         initialdomains()
