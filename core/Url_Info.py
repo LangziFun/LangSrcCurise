@@ -243,7 +243,7 @@ def DomainsInfos(domains):
         if os.path.exists('DomainsInfos.txt'):
             with open('DomainsInfos.txt', 'r', encoding='utf-8')as a:
                 DOMAINSINFOS = eval(a.read())
-            if len(list(DOMAINSINFOS.keys())) != len(domains):
+            if len(list(DOMAINSINFOS.keys())) != len(domains) or list(set(DOMAINSINFOS.keys()).difference(set(domains))) != []:
                 os.remove('DomainsInfos.txt')
                 with ThreadPoolExecutor() as pool:
                     res = pool.map(GetDomainsInfos, domains)

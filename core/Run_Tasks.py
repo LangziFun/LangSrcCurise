@@ -103,7 +103,7 @@ print('[加载] 开始获取泛解析对比数据 请耐心等待 获取目标�
 DomainsInfos(Sub_Domains)
 print('[成功] 泛解析对比数据获取成功 请耐心等待数据持续收集整理\n\n')
 from .main import Sub_Crawl,Sub_Baidu,Sub_Brute,Run_Cpu_Min,Sub_ChangeIp,Sub_ChangeInf,Sub_Api,Heartbeat
-from .Send_Report import run,TestEmail
+from .Send_Report import SendEmailReport,TestEmail
 TestEmail(host=email_host,port=email_port,sender=email_username,pwd=email_password,receiver=email_receivers[0])
 
 def start():
@@ -115,7 +115,7 @@ def start():
     p7 = Process(target=Sub_ChangeInf,args=(Sub_Domains,))
     p5 = Process(target=Sub_Brute,args=(Sub_Domains,))
     p9 = Process(target=Heartbeat)
-    p10 = Process(target=run)
+    p10 = Process(target=SendEmailReport)
     p1.start()
     p2.start()
     p3.start()

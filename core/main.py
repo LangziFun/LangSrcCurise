@@ -713,10 +713,10 @@ def Run_Crawl(Domains):
                     if res !=[]:
                         if len(res)>150:
                             for r in res:
-                                print('[+ URL Universal] 泛解析网址自动过滤 : {}'.format(url))
+                                print('[+ URL Universal] 泛解析网址自动过滤 : {}'.format(r))
                                 try:
                                     close_old_connections()
-                                    BLACKURL.objects.create(url=r,ip=get_host(url), title=RequestsTitle(r),resons='泛解析自动过滤')
+                                    BLACKURL.objects.create(url=r,ip=get_host(r), title=RequestsTitle(r),resons='泛解析自动过滤')
                                 except:
                                     pass
                         else:

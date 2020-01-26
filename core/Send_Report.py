@@ -15,12 +15,9 @@ sys.path.insert(0,os.path.abspath(os.path.join(pathname,'..')))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","LangSrcCurise.settings")
 django.setup()
 from app.models import Other_Url,IP,URL,Show_Data,Error_Log,Cpu_Min,Domains,Setting,Content,BLACKURL
-from django.db import connections
+from core.main import Except_Log,close_old_connections
 
-def close_old_connections():
-    '''维持数据库心跳包'''
-    for conn in connections.all():
-        conn.close_if_unusable_or_obsolete()
+
 # 尝试获取当天获取的子域名获取数量，来源表为--》域名资产表
 from django.utils import timezone
 from datetime import timedelta
@@ -74,7 +71,9 @@ def MakeInfoResult():
     CurrentDaySubdomain = URL.objects.filter(change_time__gt=start)
     # 查询当日24小时捕获的数据
     CurrentUrl = [c.url for c in CurrentDaySubdomain]
-    # 捕获总数
+    # 捕获所有的网址
+    CurrentIp = [c.ip for c in CurrentDaySubdomain]
+    # 捕获所有的IP
     CurrentDomain = dict.fromkeys(ALL_DOMAINS,0)
     for domain in ALL_DOMAINS:
         for curl in CurrentUrl:
@@ -112,25 +111,36 @@ def MakeInfoResult():
         row+=1
     body = body+''.join([a.format(x,y) for x,y in CurrentDomain.items()])+'</table>'
 
-    CurrentDaySubdomain = Other_Url.objects.filter(change_time__gt=start)
+    CurrentDaySubdomain = Other_Url.objects.filter(url__in=CurrentUrl)
     # 查询当日24小时捕获的数据
     worksheet = workbook.add_worksheet('当日捕获资产数据详情')
-    headings = ['捕获新资产网址','网址标题','网站容器','脚本语言','请求响应','IP地址','捕获时间']  # 设置表头
+    headings = ['捕获新资产网址','网址标题','网站容器','脚本语言','请求响应','IP地址','端口服务','操作系统','部署网站','IP归属地','捕获时间']  # 设置表头
     worksheet.write_row('A1', headings)
     bold = workbook.add_format({'bold': True})
     worksheet.set_column(0, 10, 20, bold)
     row = 1
     col = 0
     for cur in CurrentDaySubdomain:
-        if cur.url in CurrentUrl:
-            worksheet.write_row(row, col, [cur.url,cur.title,cur.power,cur.server,cur.status,cur.ip,str(cur.change_time).split('.')[0]])
-            row += 1
+        try:
+            if cur.url in CurrentUrl:
+                MidIpObj = IP.objects.filter(ip=cur.ip)
+                if list(MidIpObj) == []:
+                    worksheet.write_row(row, col,
+                                        [cur.url, cur.title, cur.power, cur.server, cur.status, cur.ip, '暂无数据',
+                                         '暂无数据', '暂无数据', '暂无数据', str(cur.change_time).split('.')[0]])
+
+                else:
+                    Mid = MidIpObj[0]
+                    worksheet.write_row(row, col, [cur.url,cur.title,cur.power,cur.server,cur.status,cur.ip,Mid.servers,Mid.host_type,Mid.alive_urls,Mid.area,str(cur.change_time).split('.')[0]])
+                row += 1
+        except Exception as e:
+            Except_Log(stat=107, url='生成Xlsx文档失败，失败原因为:{}', error=str(e))
     workbook.close()
     return (body,XlsxFileName)
 
 
 def TestEmail(host,port,sender,pwd,receiver):
-    body = '<h1>LangSrcCurise邮箱可用性测试</h1>'
+    body = '<h1>LangSrcCurise邮箱测试发送成功~</h1>'
     msg = MIMEMultipart()
     msg.attach(MIMEText(body, 'html'))
     msg['subject'] = 'LangSrcCurise邮箱可用性测试'
@@ -143,6 +153,7 @@ def TestEmail(host,port,sender,pwd,receiver):
         print('[Test Email] 邮件发送成功~测试发送邮件成功~\n')
     except smtplib.SMTPException as e:
         print('[Test Email] 邮件发送失败，失败原因为:{}'.format(str(e)))
+        Except_Log(stat=104, url='邮件发送失败，失败原因为:{}', error=str(e))
         time.sleep(5)
 
 
@@ -152,7 +163,8 @@ def SendEmail(body,xlsname,host,port,sender,pwd,receiver):
     msg = MIMEMultipart()
     msg.attach(MIMEText(body, 'html'))
     msg.attach(xlsxpart)
-    msg['subject'] = '2020年1月22日资产监控报告'
+    i = datetime.datetime.now()
+    msg['subject'] = '{}年{}月{}日资产监控报告'.format(i.year, i.month, i.day)
     msg['from'] = 'LangSrcCurise每日监控报表'
     msg['to'] = receiver
     try:
@@ -162,6 +174,7 @@ def SendEmail(body,xlsname,host,port,sender,pwd,receiver):
         print('[Send Email] 邮件发送成功！！')
     except smtplib.SMTPException as e:
         print('[Send Email] 邮件发送失败~~~失败原因:{}'.format(str(e)))
+        Except_Log(stat=105, url='邮件发送失败~~~失败原因:', error=str(e))
 
 def StartSendReport():
     try:
@@ -170,12 +183,13 @@ def StartSendReport():
         for recev in email_receivers:
             try:
                 SendEmail(body=body, xlsname=xlsname, host=email_host, port=email_port, sender=email_username, pwd=email_password, receiver=recev)
-            except:
+            except Exception as e:
+                Except_Log(stat=107, url='尝试推送每日监控报表到邮箱失败~~~失败原因:', error=str(e))
                 pass
     except Exception as e:
-        print(e)
+        Except_Log(stat=106, url='尝试发送邮箱失败~~~失败原因:', error=str(e))
 
-def run():
+def SendEmailReport():
     schedule.every().day.at("20:30").do(StartSendReport)
     # 上面代码意思为 每天的 20：30 自动发送报表
     # schedule.every(20).minutes.do(StartSendReport) 每20分钟发送一次

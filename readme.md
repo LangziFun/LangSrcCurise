@@ -55,6 +55,7 @@ LangSrcCurise资产监控系统是一套通过网络搜索引擎监控其下指�
 7. 通过  域名服务器      进行端口扫描，服务探测
 8. 通过  域名服务器      进行探测是否部署web服务
 9. 通过  域名服务器      进行其他数据清洗管理
+10. 每日自动推送监控报表到邮箱
 
 
 
@@ -124,11 +125,7 @@ Windows下推荐mysql.ini设置如下：
 
 并且到securitytrails注册账号填写自己的API
 
-下方为接受每日报表邮箱信息，每天下午20点30分自动发送到邮箱，如果需要修改发送时间，修改代码
 
-    core/Send_Report.py 
-    
-修改最下方时间点后，重启扫描端即可
 
 	[Server]
 	host = 127.0.0.1 
@@ -143,6 +140,14 @@ Windows下推荐mysql.ini设置如下：
 	[API]
 	securitytrails = PWOSUIBIANXIEDE886X
 	# https://securitytrails.com 注册，免费账户一个月可以查询50次
+
+下方为接受每日报表邮箱信息，每天下午20点30分自动发送到邮箱，如果需要修改发送时间，修改代码
+
+    core/Send_Report.py 
+    
+修改最下方时间点后，重启扫描端即可
+
+
     [Email]
     host = smtp.163.com
     # 邮箱使用服务器，一般用的163邮箱或者qq邮箱，具体方法自行百度
