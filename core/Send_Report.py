@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+﻿# -*- coding:utf-8 -*-
 import schedule,time
 import smtplib,configparser
 from email.mime.text import MIMEText
@@ -68,11 +68,12 @@ def MakeInfoResult():
         <th>{}</th>
         </tr>
         '''
-    CurrentDaySubdomain = URL.objects.filter(change_time__gt=start)
+    CurrentDaySubdomain = URL.objects.filter(change_time__gt=datetime.datetime.now().date() + timedelta(days=0))
+    # CurrentDaySubdomain = URL.objects.filter(change_time__gt=start)
     # 查询当日24小时捕获的数据
     CurrentUrl = [c.url for c in CurrentDaySubdomain]
     # 捕获所有的网址
-    CurrentIp = [c.ip for c in CurrentDaySubdomain]
+    # CurrentIp = [c.ip for c in CurrentDaySubdomain]
     # 捕获所有的IP
     CurrentDomain = dict.fromkeys(ALL_DOMAINS,0)
     for domain in ALL_DOMAINS:
@@ -97,7 +98,6 @@ def MakeInfoResult():
         </tr>
         '''.format(timer,daycou,allcou)
 
-
     worksheet = workbook.add_worksheet('当日捕获数据')
     headings = ['监控域名','当日新增捕获数量', '报告发送时间']  # 设置表头
     worksheet.write_row('A1', headings)
@@ -110,7 +110,6 @@ def MakeInfoResult():
         worksheet.write_row(row, col, [x,y,str(start).split('.')[0]])
         row+=1
     body = body+''.join([a.format(x,y) for x,y in CurrentDomain.items()])+'</table>'
-
     CurrentDaySubdomain = Other_Url.objects.filter(url__in=CurrentUrl)
     # 查询当日24小时捕获的数据
     worksheet = workbook.add_worksheet('当日捕获资产数据详情')
@@ -123,6 +122,7 @@ def MakeInfoResult():
     for cur in CurrentDaySubdomain:
         try:
             if cur.url in CurrentUrl:
+                close_old_connections()
                 MidIpObj = IP.objects.filter(ip=cur.ip)
                 if list(MidIpObj) == []:
                     worksheet.write_row(row, col,
@@ -187,6 +187,7 @@ def StartSendReport():
                 Except_Log(stat=107, url='尝试推送每日监控报表到邮箱失败~~~失败原因:', error=str(e))
                 pass
     except Exception as e:
+        StartSendReport()
         Except_Log(stat=106, url='尝试发送邮箱失败~~~失败原因:', error=str(e))
 
 def SendEmailReport():
