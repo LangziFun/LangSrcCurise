@@ -164,8 +164,8 @@ def Add_Data_To_Url(url):
             BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='当前网址不在域名监控域名范围内')
             return
         except:
-            pass
-    print('[+ Insert Url] 入库网址 : {}'.format(url))
+            close_old_connections()
+            return
     if '.gov.cn' in url or '.edu.cn' in url:
         return
     urlinblackurl = check_black(url,black_url)
@@ -228,18 +228,32 @@ def Add_Data_To_Url(url):
         inftitle,infip,infcontent = DOMAINSINFOS[infjx]['title'],DOMAINSINFOS[infjx]['ip'],DOMAINSINFOS[infjx]['content']
         DD = Get_Url_Info(url).get_info()
         comtitle,comip,comcontent = DD['title'],DD['ip'],DD['content']
-        if inftitle != comtitle:
-            # 如果标题不一样，显而易见不是泛解析~,大概是80%的准确率
-            pass
+        # if inftitle != comtitle:
+        #     # 如果标题不一样，肯不是泛解析~,大概是80%的准确率，但是对安居客来说，这一点判断是无效的
+        #     pass
+        #else:
+        if Return_Content_Difflib(infcontent,comcontent) == True:
+            try:
+                print('[+ URL Universal] 泛解析网址自动过滤 : {}'.format(url))
+                close_old_connections()
+                BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='泛解析自动过滤')
+                return
+            except:
+                return
         else:
-            if Return_Content_Difflib(infcontent,comcontent) == True:
+            DD1 = Get_Url_Info(url.replace('://','://yyyyyyyyy')).get_info()
+            comtitle1, comip1, comcontent1 = DD1['title'], DD1['ip'], DD1['content']
+            if Return_Content_Difflib(comcontent, comcontent1) == True:
                 try:
                     print('[+ URL Universal] 泛解析网址自动过滤 : {}'.format(url))
                     close_old_connections()
                     BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='泛解析自动过滤')
                     return
                 except:
-                    pass
+                    return
+
+
+        print('[+ Insert Url] 入库网址 : {}'.format(url))
         try:
             Test_Other_Url = Other_Url.objects.filter(url=url)
             '''判断网络资产表是否有这个数据，如果没有的话，就添加进去'''
