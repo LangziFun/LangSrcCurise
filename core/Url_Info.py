@@ -227,7 +227,7 @@ def GetDomainsInfos(domain):
             - 认定为泛解析，保存到 排除资产数据表
     '''
     ORICOM = {domain:{'title': 'None', 'ip': 'None', 'content': 'None'}}
-    DD = Get_Url_Info('http://asyyyyyyyyyyyyyy.{}'.format(domain)).get_info()
+    DD = Get_Url_Info('http://shanghai.{}'.format(domain)).get_info()
     ORICOM[domain]['title'],ORICOM[domain]['ip'],ORICOM[domain]['content'], = DD['title'],DD['ip'],DD['content']
     return ORICOM
 
