@@ -450,7 +450,8 @@ class Get_Ip_Info:
                         if v == banne:
                             pass
                         else:
-                            result[k] = banne
+                            if banne != '获取失败':
+                                result[k] = banne
             except:
                 time.sleep(10)
                 # 重试一次
@@ -468,7 +469,8 @@ class Get_Ip_Info:
                             if v == banne:
                                 pass
                             else:
-                                result[k] = banne
+                                if banne != '获取失败':
+                                    result[k] = banne
                 except Exception as e:
                     print('错误代码 [13] {} 扫描当前IP失败'.format(str(e)))
                     Error_Log.objects.create(url=ip + '|扫描当前IP失败', error='错误代码 [13] {} '.format(str(e)))
