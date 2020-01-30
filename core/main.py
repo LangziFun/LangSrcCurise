@@ -229,17 +229,18 @@ def Add_Data_To_Url(url):
         DD = Get_Url_Info(url).get_info()
         comtitle,comip,comcontent = DD['title'],DD['ip'],DD['content']
         # if inftitle != comtitle:
-        #     # 如果标题不一样，肯不是泛解析~,大概是80%的准确率，但是对安居客来说，这一点判断是无效的
+        #     # 如果标题不一样,决策为不是泛解析~,大概是80%的准确率，但是对安居客来说，这一点判断是无效的
         #     pass
         #else:
-        if Return_Content_Difflib(infcontent,comcontent) == True:
-            try:
-                print('[+ URL Universal] 泛解析网址自动过滤 : {}'.format(url))
-                close_old_connections()
-                BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='泛解析自动过滤')
-                return
-            except:
-                return
+        if infcontent != 'Error' and comcontent != 'Error':
+            if Return_Content_Difflib(infcontent,comcontent) == True:
+                try:
+                    print('[+ URL Universal] 泛解析网址自动过滤 : {}'.format(url))
+                    close_old_connections()
+                    BLACKURL.objects.create(url=url, ip=get_host(url), title=RequestsTitle(url), resons='泛解析自动过滤')
+                    return
+                except:
+                    return
         else:
             DD1 = Get_Url_Info(url.replace('://','://yyyyyyyyy')).get_info()
             comtitle1, comip1, comcontent1 = DD1['title'], DD1['ip'], DD1['content']
