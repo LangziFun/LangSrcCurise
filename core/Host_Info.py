@@ -445,6 +445,8 @@ class Get_Ip_Info:
                     for k, v in r.items():
                         if v.get('state') == 'open':
                             result[k]=v.get('name')
+                    if len(result)>200:
+                        return {'WAF拦截':'扫描返回开放端口总数:{}'.format(len(result))}
                     for k,v in result.items():
                         banne = self.get_server_from_banner(ip,int(k))
                         if v == banne:
@@ -464,6 +466,8 @@ class Get_Ip_Info:
                         for k, v in r.items():
                             if v.get('state') == 'open':
                                 result[k] = v.get('name')
+                        if len(result) > 200:
+                            return {'WAF拦截': '扫描返回开放端口总数:{}'.format(len(result))}
                         for k,v in result.items():
                             banne = self.get_server_from_banner(ip, int(k))
                             if v == banne:
