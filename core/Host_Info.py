@@ -178,8 +178,8 @@ def Requests(url):
     title = '获取失败'
     title1 = '获取失败'
     title2 = '获取失败'
-    content1 = None
-    content2 = None
+    content1 = b'666666666'
+    content2 = b'666666666'
     try:
         r = requests.get(url='http://'+url,headers=headers,verify=False,timeout=5)
         if b'Unauthorized' in r.content and b'MAC Address' in r.content and b'IP Address' in r.content:
@@ -255,16 +255,18 @@ def Requests(url):
                 s.close()
     except Exception as e:
         pass
+    if b'66666' not in content1 and b'sent to HTTPS port' not in content1 and 'sent to HTTPS port' not in title1:
+        return [{url1: title1}]
+    if b'66666' not in content2 and b'sent to HTTPS port' not in content2 and 'sent to HTTPS port' not in title2:
+        return [{url2: title2}]
     if title1 != '获取失败' and title2 == '获取失败':
         return [{url1: title1}]
     if title2 != '获取失败' and title1 == '获取失败':
         return [{url2: title2}]
-    if title1 != '获取失败' and title2 != '获取失败':
-        return [{url1: title1},{url2: title2}]
-    if content1 != None:
-        return [{url1:title}]
-    if content2 != None:
-        return [{url2:title}]
+    if b'66666' not in content1:
+        return [{url1:title1}]
+    if b'66666' not in content2:
+        return [{url2:title2}]
 def Get_Alive_Url(urls):
     '''
     如果想要获取 IP 段内存活web服务
