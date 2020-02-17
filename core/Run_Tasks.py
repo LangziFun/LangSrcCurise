@@ -104,7 +104,10 @@ DomainsInfos(Sub_Domains)
 print('[成功] 泛解析对比数据获取成功 请耐心等待数据持续收集整理\n\n')
 from .main import Sub_Crawl,Sub_Baidu,Sub_Brute,Run_Cpu_Min,Sub_ChangeIp,Sub_ChangeInf,Sub_Api,Heartbeat
 from .Send_Report import SendEmailReport,TestEmail
-TestEmail(host=email_host,port=email_port,sender=email_username,pwd=email_password,receiver=email_receivers[0])
+try:
+    TestEmail(host=email_host,port=email_port,sender=email_username,pwd=email_password,receiver=email_receivers[0])
+except Exception as e:
+    pass
 
 def start():
     p1 = Process(target=Sub_Api,args=(Sub_Domains,))

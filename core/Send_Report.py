@@ -151,7 +151,7 @@ def TestEmail(host,port,sender,pwd,receiver):
         s.login(sender, pwd)
         s.sendmail(sender, receiver, msg.as_string())
         print('[Test Email] 邮件发送成功~测试发送邮件成功~\n')
-    except smtplib.SMTPException as e:
+    except Exception as e:
         print('[Test Email] 邮件发送失败，失败原因为:{}'.format(str(e)))
         Except_Log(stat=104, url='邮件发送失败，失败原因为:{}', error=str(e))
         time.sleep(5)
@@ -172,7 +172,7 @@ def SendEmail(body,xlsname,host,port,sender,pwd,receiver):
         s.login(sender, pwd)
         s.sendmail(sender, receiver, msg.as_string())
         print('[Send Email] 邮件发送成功！！')
-    except smtplib.SMTPException as e:
+    except Exception as e:
         print('[Send Email] 邮件发送失败~~~失败原因:{}'.format(str(e)))
         Except_Log(stat=105, url='邮件发送失败~~~失败原因:', error=str(e))
 
@@ -185,7 +185,6 @@ def StartSendReport():
                 SendEmail(body=body, xlsname=xlsname, host=email_host, port=email_port, sender=email_username, pwd=email_password, receiver=recev)
             except Exception as e:
                 Except_Log(stat=107, url='尝试推送每日监控报表到邮箱失败~~~失败原因:', error=str(e))
-                pass
     except Exception as e:
         StartSendReport()
         Except_Log(stat=106, url='尝试发送邮箱失败~~~失败原因:', error=str(e))
