@@ -20,13 +20,13 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 class BeiAn:
     def __init__(self,keyword):
         self.keyword=keyword
-        self.title_parrten = 'class="w61-0"><div class="ball">(.*?)</div></td>'  # group(1) 正常
-        self.ip_parrten = '>IP：(.*?)</a></div>'  # group(1) 正常
+        self.title_parrten = '<div class="_chinaz-seo-t2l">(.*?) <i class="iconfo'  # group(1) 正常
+        self.ip_parrten = '>IP：.*?\?ip=(.*?)" target'  # group(1) 正常
         self.ages = '" target="_blank">(.*?)</a></div></div>'  # group(1)
-        self.whois_id = '备案号:</span><a href=.*?arget="_blank">(.*?)</a></div>'  # 需group(1)
-        self.whois_type = '<div><span>性质:</span><strong>(.*?)</strong></div>'  # 需group(1)
-        self.whois_name = '<span>名称:</span><strong>(.*?)</strong><a href="javas'  # 需group(1)
-        self.whois_time = '<span>审核时间：</span><strong>(.*?)</strong></div>'  # 需group(1)
+        self.whois_id = '<a href="//icp.chinaz.com/.*?" target="_blank">(.*?)</a></i></span>'  # 需group(1)
+        self.whois_type = '<span>性质：<i class="color-63">(.*?)</i></span>'  # 需group(1)
+        self.whois_name = '名称.*?target="_blank">(.*?)</a>'  # 需group(1)
+        self.whois_time = '审核时间.*?">(.*?)</i></span>'  # 需group(1)
         self.include_baidu = '<div class="Ma01LiRow w12-1 ">(.*?)</div>'  # group(1)
         self.infos = '<div class="MaLi03Row w180">(.*?)</div>'  # 要findall 0，1，2，3
         self.result={}
