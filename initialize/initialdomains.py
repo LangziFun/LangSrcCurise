@@ -24,8 +24,8 @@ class BeiAn:
         self.ip_parrten = '>IP：.*?\?ip=(.*?)" target'  # group(1) 正常
         self.ages = '" target="_blank">(.*?)</a></div></div>'  # group(1)
         self.whois_id = '<a href="//icp.chinaz.com/.*?" target="_blank">(.*?)</a></i></span>'  # 需group(1)
-        self.whois_type = '<span>性质：<i class="color-63">(.*?)</i></span>'  # 需group(1)
-        self.whois_name = '名称.*?target="_blank">(.*?)</a>'  # 需group(1)
+        self.whois_type = '性质：.*?">(.*?)</i>'  # 需group(1)
+        self.whois_name = '名称：.*?style=.*?">(.*?)</a>'  # 需group(1)
         self.whois_time = '审核时间.*?">(.*?)</i></span>'  # 需group(1)
         self.include_baidu = '<div class="Ma01LiRow w12-1 ">(.*?)</div>'  # group(1)
         self.infos = '<div class="MaLi03Row w180">(.*?)</div>'  # 要findall 0，1，2，3
@@ -109,12 +109,15 @@ def initialdomains():
             bname = str(res.get('备案名称'))
             print(bid,bname,bsex)
             close_old_connections()
-            BA = Domains()
-            BA.url = task.lower()
-            BA.BA_sex = bsex
-            BA.BA_name = bname
-            BA.BA_id = bid
-            BA.save()
+            try:
+                BA = Domains()
+                BA.url = task.lower()
+                BA.BA_sex = bsex
+                BA.BA_name = bname
+                BA.BA_id = bid
+                BA.save()
+            except:
+                pass
 def InsertUrls(filetxt):
     print('\n[加载] 开始获取泛解析对比数据 请耐心等待 获取目标总数为 : {}\n\n'.format(len(ALL_DOMAINS)))
     DomainsInfos(ALL_DOMAINS)
@@ -127,4 +130,5 @@ def InsertUrls(filetxt):
         print('读取导入域名文本失败:{}'.find(str(e)))
 
 if __name__ == '__main__':
-    pass
+    res = BeiAn('qq.com').scan_seo()
+    print(res)
